@@ -1,0 +1,1827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Graphite Design System — Transfinder Sales</title>
+
+<!-- Fonts: Outfit (closest Google Fonts equivalent to Goodpast-Regular) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Tabulator -->
+<link rel="stylesheet" href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css">
+<script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js" defer></script>
+
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   GRAPHITE DESIGN TOKENS
+   Font: Outfit (Google Fonts — use in place of Goodpast-Regular)
+   Copy this :root block to start any new Transfinder Sales page.
+══════════════════════════════════════════════════════════════════ */
+:root {
+  /* — Core palette — */
+  --black:       #262626;   /* darkest — page headers, strongest text  */
+  --charcoal:    #4B4B4B;   /* primary body text                       */
+  --silver:      #D6D6D6;   /* borders, dividers, rules                */
+  --smoke:       #F2F2F2;   /* page background                         */
+  --ice:         #ECF2F9;   /* panel / card surface, table header      */
+  --white:       #FFFFFF;   /* pure white — modals, elevated surfaces  */
+  --clay:        #D76B5B;   /* primary accent — terracotta             */
+  --clay-dark:   #B85848;   /* hover / pressed state of clay           */
+  --green:       #349A03;   /* success, sold, positive                 */
+  --green-dark:  #267602;   /* hover / pressed state of green          */
+  --red:         #E21837;   /* danger, gap, error, destructive         */
+  --red-dark:    #B8112C;   /* hover / pressed state of red            */
+
+  /* — Secondary accents — */
+  --blue-accent: #1565c0;   /* checkbox fill, focus ring               */
+  --amber:       #f9a825;   /* warning icons on trip rows              */
+
+  /* — Neutral ramp — */
+  --gray-50:     #FAFAFA;
+  --gray-100:    #F2F2F2;
+  --gray-200:    #E8E8E8;
+  --gray-300:    #D6D6D6;
+  --gray-400:    #BFBFBF;
+  --gray-500:    #9A9A9A;   /* muted text, secondary labels            */
+  --gray-600:    #6B6B6B;
+  --gray-700:    #4B4B4B;   /* = --charcoal                            */
+  --gray-800:    #363636;
+  --gray-900:    #262626;   /* = --black                               */
+
+  /* — Typography — */
+  --sans: 'Outfit', system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Consolas', 'Courier New', monospace;
+
+  /* — Type scale — */
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 15px;
+  --text-md:   17px;
+  --text-lg:   20px;
+  --text-xl:   24px;
+  --text-2xl:  32px;
+  --text-3xl:  42px;
+  --text-4xl:  56px;
+
+  /* — Spacing — */
+  --sp-1:  4px;
+  --sp-2:  8px;
+  --sp-3:  12px;
+  --sp-4:  16px;
+  --sp-5:  24px;
+  --sp-6:  32px;
+  --sp-7:  48px;
+  --sp-8:  64px;
+  --sp-9:  96px;
+
+  /* — Radius — */
+  --radius-xs:   2px;
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   10px;
+  --radius-xl:   16px;
+  --radius-full: 999px;
+
+  /* — Border — */
+  --border-width: 1px;
+  --border: var(--border-width) solid var(--silver);
+
+  /* — Elevation (cool, neutral shadows) — */
+  --shadow-xs: 0 1px 2px rgba(38,38,38,0.06);
+  --shadow-sm: 0 1px 4px rgba(38,38,38,0.08);
+  --shadow-md: 0 4px 14px rgba(38,38,38,0.10);
+  --shadow-lg: 0 10px 28px rgba(38,38,38,0.12);
+  --shadow-xl: 0 20px 48px rgba(38,38,38,0.16);
+
+  /* — Transitions — */
+  --ease: 0.13s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   GLOBAL RESET & BASE
+══════════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--smoke);
+  color: var(--charcoal);
+  font-family: var(--sans);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════════════════ */
+.guide-wrap {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
+
+.side-nav {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--white);
+  border-right: var(--border);
+  padding: var(--sp-6) var(--sp-4) var(--sp-6) var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+}
+
+.nav-logo {
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-4);
+  border-bottom: var(--border);
+}
+
+.nav-logo img { height: 28px; width: auto; display: block; }
+
+.nav-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--gray-500);
+  margin-bottom: var(--sp-1);
+  margin-top: var(--sp-3);
+}
+
+.nav-eyebrow:first-of-type { margin-top: 0; }
+
+.nav-link {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-600);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  transition: background var(--ease), color var(--ease);
+}
+
+.nav-link:hover { background: var(--smoke); color: var(--black); }
+.nav-link.active { background: rgba(215,107,91,0.10); color: var(--clay); font-weight: 600; }
+
+.guide-main {
+  padding: var(--sp-7) var(--sp-7) var(--sp-9);
+  max-width: 900px;
+}
+
+/* Section spacing */
+.guide-section {
+  margin-bottom: var(--sp-9);
+  scroll-margin-top: var(--sp-5);
+}
+
+.section-header {
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-4);
+  border-bottom: var(--border);
+}
+
+.section-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--clay);
+  margin-bottom: var(--sp-1);
+}
+
+.section-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--black);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.section-desc {
+  font-size: var(--text-sm);
+  color: var(--gray-500);
+  margin-top: var(--sp-2);
+  line-height: 1.6;
+}
+
+/* Page hero */
+.guide-hero {
+  margin-bottom: var(--sp-8);
+  padding-bottom: var(--sp-6);
+  border-bottom: 2px solid var(--black);
+}
+
+.guide-hero-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--clay);
+  margin-bottom: var(--sp-3);
+}
+
+.guide-hero-title {
+  font-size: var(--text-4xl);
+  font-weight: 800;
+  color: var(--black);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.guide-hero-sub {
+  font-size: var(--text-lg);
+  font-weight: 300;
+  color: var(--gray-500);
+  margin-top: var(--sp-2);
+  letter-spacing: -0.01em;
+}
+
+/* Grid helpers */
+.col-2 { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
+.col-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--sp-4); }
+.col-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: var(--sp-3); }
+@media (max-width: 680px) { .col-2,.col-3,.col-4 { grid-template-columns: 1fr; } }
+
+/* ══════════════════════════════════════════════════════════════════
+   COLOR SECTION
+══════════════════════════════════════════════════════════════════ */
+.swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-5);
+}
+
+.swatch {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: var(--border);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.swatch:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.swatch-color {
+  height: 80px;
+  position: relative;
+}
+
+.swatch-body {
+  padding: 10px 12px;
+  background: var(--white);
+}
+
+.swatch-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--black);
+  display: block;
+}
+
+.swatch-hex {
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--gray-500);
+  display: block;
+  margin-top: 2px;
+}
+
+.swatch-role {
+  font-size: 10px;
+  color: var(--gray-400);
+  display: block;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+/* Ramp strip */
+.ramp {
+  display: flex;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  height: 48px;
+  border: var(--border);
+  margin-bottom: var(--sp-3);
+}
+
+.ramp-step {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  padding: 4px;
+}
+
+.ramp-step span {
+  font-size: 9px;
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════════════════════════════════ */
+.type-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0;
+  border-bottom: var(--border);
+}
+
+.type-row:last-child { border-bottom: none; }
+
+.type-meta {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.type-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gray-500);
+  display: block;
+}
+
+.type-spec {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--gray-400);
+  display: block;
+  margin-top: 2px;
+}
+
+.type-sample { flex: 1; color: var(--black); }
+
+/* Weight showcase */
+.weight-grid {
+  display: flex;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+.weight-item { display: flex; flex-direction: column; gap: 4px; }
+.weight-sample { font-size: 22px; color: var(--black); }
+.weight-name { font-size: 11px; color: var(--gray-500); }
+
+/* ══════════════════════════════════════════════════════════════════
+   SPACING
+══════════════════════════════════════════════════════════════════ */
+.spacing-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-2) 0;
+  border-bottom: var(--border);
+}
+
+.spacing-row:last-child { border-bottom: none; }
+
+.sp-token { width: 90px; flex-shrink: 0; font-family: var(--mono); font-size: 12px; color: var(--clay); font-weight: 500; }
+.sp-px { width: 48px; flex-shrink: 0; font-size: 12px; color: var(--gray-500); }
+
+.sp-bar {
+  height: 14px;
+  background: var(--clay);
+  border-radius: var(--radius-xs);
+  opacity: 0.75;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RADIUS & ELEVATION
+══════════════════════════════════════════════════════════════════ */
+.radius-grid {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+.radius-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.radius-box {
+  width: 72px;
+  height: 72px;
+  background: var(--ice);
+  border: var(--border);
+}
+
+.radius-label { font-size: 11px; text-align: center; }
+.radius-token { font-family: var(--mono); font-size: 10px; color: var(--clay); display: block; }
+.radius-px    { color: var(--gray-500); font-size: 10px; display: block; }
+
+.shadow-grid {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.shadow-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.shadow-box {
+  width: 100px;
+  height: 80px;
+  background: var(--white);
+  border-radius: var(--radius-md);
+}
+
+.shadow-token { font-family: var(--mono); font-size: 11px; color: var(--clay); text-align: center; }
+
+/* ══════════════════════════════════════════════════════════════════
+   CORE COMPONENTS — shared style panel
+══════════════════════════════════════════════════════════════════ */
+.component-stage {
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-5);
+  margin-bottom: var(--sp-4);
+}
+
+.component-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--gray-500);
+  margin-bottom: var(--sp-3);
+  display: block;
+}
+
+/* ── Buttons ── */
+.btn-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); }
+.btn-row:last-child { margin-bottom: 0; }
+
+.btn {
+  font-family: var(--sans);
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 1px solid transparent;
+  line-height: 1;
+  transition: background var(--ease), border-color var(--ease), color var(--ease), box-shadow var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* sizes */
+.btn-sm  { font-size: 12px; padding: 5px 12px; height: 28px; }
+.btn-md  { font-size: 14px; padding: 7px 18px; height: 36px; }
+.btn-lg  { font-size: 15px; padding: 10px 24px; height: 44px; }
+
+/* variants */
+.btn-primary   { background: var(--clay);    color: #fff; border-color: var(--clay-dark); }
+.btn-primary:hover { background: var(--clay-dark); border-color: var(--clay-dark); }
+
+.btn-secondary { background: var(--ice);     color: var(--black); border-color: var(--silver); }
+.btn-secondary:hover { background: var(--gray-200); border-color: var(--gray-400); }
+
+.btn-ghost     { background: transparent;   color: var(--charcoal); border-color: var(--silver); }
+.btn-ghost:hover { background: var(--smoke); border-color: var(--gray-400); }
+
+.btn-danger    { background: var(--red);     color: #fff; border-color: var(--red-dark); }
+.btn-danger:hover { background: var(--red-dark); }
+
+.btn-success   { background: var(--green);   color: #fff; border-color: var(--green-dark); }
+.btn-success:hover { background: var(--green-dark); }
+
+.btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+}
+
+/* ── Inputs ── */
+.input-group { display: flex; flex-direction: column; gap: var(--sp-3); }
+
+.input-wrap { display: flex; flex-direction: column; gap: 5px; }
+
+.input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--black);
+  letter-spacing: 0.01em;
+}
+
+.input {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--charcoal);
+  background: var(--white);
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-sm);
+  padding: 7px 11px;
+  outline: none;
+  transition: border-color var(--ease), box-shadow var(--ease);
+  width: 100%;
+}
+
+.input::placeholder { color: var(--gray-400); }
+
+.input:focus {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 3px rgba(215,107,91,0.16);
+}
+
+.input.input-error { border-color: var(--red); }
+.input.input-error:focus { box-shadow: 0 0 0 3px rgba(226,24,55,0.14); }
+
+.input-hint { font-size: 12px; color: var(--gray-500); margin-top: 3px; }
+.input-hint.error { color: var(--red); }
+
+.input:disabled { background: var(--smoke); color: var(--gray-500); cursor: not-allowed; }
+
+.select {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--charcoal);
+  background: var(--white);
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-sm);
+  padding: 7px 11px;
+  outline: none;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color var(--ease), box-shadow var(--ease);
+}
+
+.select:focus {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 3px rgba(215,107,91,0.16);
+}
+
+/* ── Checkboxes ── */
+.check-group { display: flex; flex-direction: column; gap: var(--sp-2); }
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--charcoal);
+  user-select: none;
+}
+
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--silver);
+  border-radius: var(--radius-xs);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--ease), border-color var(--ease);
+}
+
+.check-item.checked .check-box {
+  background: var(--clay);
+  border-color: var(--clay-dark);
+}
+
+.check-item.checked .check-box svg { display: block; }
+
+.check-box svg {
+  display: none;
+  width: 11px;
+  height: 11px;
+  stroke: #fff;
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Radio */
+.radio-box {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--silver);
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color var(--ease);
+}
+
+.check-item.radio-on .radio-box {
+  border-color: var(--clay);
+}
+
+.check-item.radio-on .radio-dot { display: block; }
+
+.radio-dot {
+  display: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+/* ── Badges ── */
+.badge-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+.badge {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge-neutral  { background: var(--gray-200); color: var(--gray-700); border-color: var(--gray-300); }
+.badge-accent   { background: rgba(215,107,91,0.12); color: #A44030; border-color: rgba(215,107,91,0.30); }
+.badge-success  { background: rgba(52,154,3,0.11);  color: #246E02;  border-color: rgba(52,154,3,0.28); }
+.badge-warning  { background: rgba(200,140,20,0.12); color: #8A5E00; border-color: rgba(200,140,20,0.28); }
+.badge-danger   { background: rgba(226,24,55,0.10);  color: #B0102C;  border-color: rgba(226,24,55,0.25); }
+.badge-ice      { background: var(--ice); color: #3A6090; border-color: rgba(58,96,144,0.20); }
+
+/* ── Alerts ── */
+.alert {
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  gap: var(--sp-3);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.alert + .alert { margin-top: var(--sp-2); }
+
+.alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.alert-body strong { font-weight: 700; display: block; margin-bottom: 2px; font-size: 14px; }
+.alert-body p { color: inherit; opacity: 0.85; font-size: 13px; }
+
+.alert-info    { background: var(--ice);                   border-color: rgba(58,96,144,0.22); color: #2C4D72; }
+.alert-success { background: rgba(52,154,3,0.08);  border-color: rgba(52,154,3,0.25);  color: #1F5401; }
+.alert-warning { background: rgba(200,140,20,0.09); border-color: rgba(200,140,20,0.25); color: #6A4700; }
+.alert-danger  { background: rgba(226,24,55,0.07);  border-color: rgba(226,24,55,0.22);  color: #8C0A1F; }
+
+/* ══════════════════════════════════════════════════════════════════
+   TABULATOR — GRAPHITE THEME
+══════════════════════════════════════════════════════════════════ */
+#tabulator-demo { height: 380px; }
+
+.tabulator {
+  border: var(--border) !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden;
+  font-family: var(--sans) !important;
+}
+
+.tabulator .tabulator-header {
+  background: var(--ice) !important;
+  border-bottom: 1px solid var(--silver) !important;
+}
+
+.tabulator .tabulator-col {
+  background: transparent !important;
+  border-right-color: var(--silver) !important;
+}
+
+.tabulator .tabulator-col-title {
+  font-family: var(--sans) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: var(--gray-500) !important;
+}
+
+.tabulator .tabulator-row { background: var(--white) !important; color: var(--charcoal) !important; font-size: 13px !important; }
+.tabulator .tabulator-row.tabulator-row-even { background: var(--smoke) !important; }
+.tabulator .tabulator-row:hover { background: var(--ice) !important; }
+.tabulator .tabulator-row.tabulator-selected { background: rgba(215,107,91,0.08) !important; }
+.tabulator .tabulator-cell { border-right-color: var(--silver) !important; }
+
+.tabulator .tabulator-footer {
+  background: var(--ice) !important;
+  border-top: 1px solid var(--silver) !important;
+  font-family: var(--sans) !important;
+  font-size: 12px !important;
+  color: var(--gray-500) !important;
+}
+
+.tabulator .tabulator-page {
+  border: 1px solid var(--silver) !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--sans) !important;
+  font-size: 12px !important;
+  color: var(--charcoal) !important;
+  background: var(--white) !important;
+}
+
+.tabulator .tabulator-page.active {
+  background: var(--clay) !important;
+  color: #fff !important;
+  border-color: var(--clay-dark) !important;
+}
+
+.tabulator .tabulator-header-filter input,
+.tabulator .tabulator-header-filter select {
+  font-family: var(--sans) !important;
+  font-size: 12px !important;
+  padding: 4px 6px !important;
+  border-radius: var(--radius-sm) !important;
+  border: 1px solid var(--silver) !important;
+  outline: none !important;
+  background: var(--white) !important;
+  color: var(--charcoal) !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  transition: border-color var(--ease) !important;
+}
+
+.tabulator .tabulator-header-filter input:focus,
+.tabulator .tabulator-header-filter select:focus {
+  border-color: var(--clay) !important;
+  box-shadow: 0 0 0 2px rgba(215,107,91,0.16) !important;
+}
+
+/* ── Status pill inside table ── */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.status-open     { background: rgba(52,154,3,0.10);  color: #246E02; border: 1px solid rgba(52,154,3,0.25); }
+.status-won      { background: rgba(52,154,3,0.18);  color: #1A5200; border: 1px solid rgba(52,154,3,0.35); }
+.status-lost     { background: rgba(226,24,55,0.08); color: #A80E25; border: 1px solid rgba(226,24,55,0.22); }
+.status-prospect { background: var(--ice);           color: #3A6090; border: 1px solid rgba(58,96,144,0.22); }
+
+/* ── Filter controls above table ── */
+.table-controls {
+  display: flex;
+  gap: var(--sp-2);
+  align-items: center;
+  margin-bottom: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.ctrl-input {
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--charcoal);
+  outline: none;
+  transition: border-color var(--ease), box-shadow var(--ease);
+  height: 34px;
+  min-width: 180px;
+}
+
+.ctrl-input:focus {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 2px rgba(215,107,91,0.16);
+}
+
+.ctrl-select {
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid var(--silver);
+  border-radius: var(--radius-sm);
+  background: var(--white);
+  color: var(--charcoal);
+  outline: none;
+  cursor: pointer;
+  height: 34px;
+}
+
+.ctrl-select:focus { border-color: var(--clay); }
+
+/* ══════════════════════════════════════════════════════════════════
+   LOGO SECTION
+══════════════════════════════════════════════════════════════════ */
+.logo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+
+.logo-stage {
+  border-radius: var(--radius-md);
+  padding: var(--sp-5) var(--sp-6);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-4);
+  border: var(--border);
+}
+
+.logo-stage-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sp-2);
+}
+
+.logo-size-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+}
+
+.logo-size-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.logo-size-item img { display: block; width: auto; }
+.logo-md img { height: 36px; }
+.logo-lg img { height: 52px; }
+.logo-xl img { height: 72px; }
+
+.logo-size-label { font-size: 10px; color: inherit; opacity: 0.55; font-family: var(--mono); }
+
+/* Usage rules */
+.usage-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-4);
+}
+
+.usage-card {
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  padding: var(--sp-4);
+}
+
+.usage-card.do   { background: rgba(52,154,3,0.06);  border-color: rgba(52,154,3,0.22); }
+.usage-card.dont { background: rgba(226,24,55,0.05);  border-color: rgba(226,24,55,0.18); }
+
+.usage-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--sp-2);
+}
+
+.usage-card.do   .usage-label { color: #246E02; }
+.usage-card.dont .usage-label { color: #B0102C; }
+
+.usage-card ul {
+  padding-left: 14px;
+  font-size: 12px;
+  color: var(--charcoal);
+  line-height: 1.7;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   DARK PANEL (for white logo demo)
+══════════════════════════════════════════════════════════════════ */
+.bg-black  { background: var(--black); }
+.bg-clay   { background: var(--clay); }
+.bg-charcoal { background: var(--charcoal); }
+.bg-graphite { background: #1A1A1A; }
+
+/* ══════════════════════════════════════════════════════════════════
+   UTILITY
+══════════════════════════════════════════════════════════════════ */
+.mono { font-family: var(--mono); }
+.muted { color: var(--gray-500); }
+.divider { height: 1px; background: var(--silver); margin: var(--sp-4) 0; }
+.mt-3 { margin-top: var(--sp-3); }
+.mt-4 { margin-top: var(--sp-4); }
+.flex-row { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; }
+</style>
+</head>
+
+<body>
+<div class="guide-wrap">
+
+<!-- ── Sticky sidebar nav ── -->
+<nav class="side-nav">
+  <div class="nav-logo">
+    <a href="https://dashboard.transfinder.com/salesdashboard/landing.html">
+      <img src="tflogogrey.png" alt="Transfinder">
+    </a>
+  </div>
+
+  <span class="nav-eyebrow">Design System</span>
+  <a class="nav-link active" href="#colors">Colors</a>
+  <a class="nav-link" href="#typography">Typography</a>
+  <a class="nav-link" href="#spacing">Spacing</a>
+  <a class="nav-link" href="#elevation">Radius & Elevation</a>
+
+  <span class="nav-eyebrow">Components</span>
+  <a class="nav-link" href="#buttons">Buttons</a>
+  <a class="nav-link" href="#inputs">Inputs</a>
+  <a class="nav-link" href="#selections">Checkboxes</a>
+  <a class="nav-link" href="#badges">Badges & Alerts</a>
+
+  <span class="nav-eyebrow">Patterns</span>
+  <a class="nav-link" href="#table">Data Table</a>
+  <a class="nav-link" href="#logo">Logo Usage</a>
+</nav>
+
+<!-- ── Main content ── -->
+<main class="guide-main">
+
+  <!-- Hero -->
+  <div class="guide-hero">
+    <div class="guide-hero-eyebrow">Transfinder Sales Design System</div>
+    <div class="guide-hero-title">Graphite</div>
+    <div class="guide-hero-sub">Precise. Structured. Direct.</div>
+    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--gray-500);">
+      <span><strong style="color:var(--black);">Font:</strong> Outfit (Goodpast-Regular equivalent)</span>
+      <span>·</span>
+      <span><strong style="color:var(--black);">Primary:</strong> #D76B5B Terracotta</span>
+      <span>·</span>
+      <span><strong style="color:var(--black);">Base:</strong> #4B4B4B Charcoal on #F2F2F2 Smoke</span>
+    </div>
+  </div>
+
+  <!-- ─────────────── COLORS ─────────────── -->
+  <section class="guide-section" id="colors">
+    <div class="section-header">
+      <div class="section-eyebrow">01 — Foundation</div>
+      <div class="section-title">Color</div>
+      <div class="section-desc">Eight core palette colors and a neutral ramp. Use terracotta (#D76B5B) for primary CTAs and interactions. Ice (#ECF2F9) for panels and info surfaces. Red (#E21837) strictly for errors and destructive actions. Two secondary accents supplement the palette: Blue Accent (#1565c0) for checkbox fills and focus rings; Warning Amber (#f9a825) for warning icons on trip rows.</div>
+    </div>
+
+    <!-- Core 8 palette swatches -->
+    <span class="component-label">Core palette</span>
+    <div class="swatch-grid">
+      <div class="swatch" onclick="navigator.clipboard.writeText('#262626')">
+        <div class="swatch-color" style="background:#262626;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Black</span>
+          <span class="swatch-hex">#262626</span>
+          <span class="swatch-role">Headers, strongest text</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#4B4B4B')">
+        <div class="swatch-color" style="background:#4B4B4B;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Charcoal</span>
+          <span class="swatch-hex">#4B4B4B</span>
+          <span class="swatch-role">Body text, primary</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#D6D6D6')">
+        <div class="swatch-color" style="background:#D6D6D6;border-bottom:1px solid #ccc;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Silver</span>
+          <span class="swatch-hex">#D6D6D6</span>
+          <span class="swatch-role">Borders, dividers</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#F2F2F2')">
+        <div class="swatch-color" style="background:#F2F2F2;border-bottom:1px solid #E8E8E8;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Smoke</span>
+          <span class="swatch-hex">#F2F2F2</span>
+          <span class="swatch-role">Page background</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#ECF2F9')">
+        <div class="swatch-color" style="background:#ECF2F9;border-bottom:1px solid #D4E4F4;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Ice</span>
+          <span class="swatch-hex">#ECF2F9</span>
+          <span class="swatch-role">Panels, table header, info</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#D76B5B')">
+        <div class="swatch-color" style="background:#D76B5B;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Terracotta</span>
+          <span class="swatch-hex">#D76B5B</span>
+          <span class="swatch-role">Primary accent, CTA</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#349A03')">
+        <div class="swatch-color" style="background:#349A03;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Green</span>
+          <span class="swatch-hex">#349A03</span>
+          <span class="swatch-role">Success, sold, positive</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#E21837')">
+        <div class="swatch-color" style="background:#E21837;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Red</span>
+          <span class="swatch-hex">#E21837</span>
+          <span class="swatch-role">Danger, error, gap</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secondary accent swatches -->
+    <span class="component-label" style="margin-top:20px;">Secondary accents</span>
+    <div class="swatch-grid" style="grid-template-columns:repeat(auto-fill,minmax(140px,1fr));max-width:320px;">
+      <div class="swatch" onclick="navigator.clipboard.writeText('#1565c0')">
+        <div class="swatch-color" style="background:#1565c0;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Blue Accent</span>
+          <span class="swatch-hex">#1565c0</span>
+          <span class="swatch-role">Checkbox fill, focus ring</span>
+        </div>
+      </div>
+      <div class="swatch" onclick="navigator.clipboard.writeText('#f9a825')">
+        <div class="swatch-color" style="background:#f9a825;"></div>
+        <div class="swatch-body">
+          <span class="swatch-name">Warning Amber</span>
+          <span class="swatch-hex">#f9a825</span>
+          <span class="swatch-role">Warning icons, trip rows</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Neutral ramp -->
+    <span class="component-label" style="margin-top:12px;">Neutral gray ramp</span>
+    <div class="ramp">
+      <div class="ramp-step" style="background:#FAFAFA;"><span style="color:#9A9A9A;">50</span></div>
+      <div class="ramp-step" style="background:#F2F2F2;"><span style="color:#9A9A9A;">100</span></div>
+      <div class="ramp-step" style="background:#E8E8E8;"><span style="color:#9A9A9A;">200</span></div>
+      <div class="ramp-step" style="background:#D6D6D6;"><span style="color:#6B6B6B;">300</span></div>
+      <div class="ramp-step" style="background:#BFBFBF;"><span style="color:#4B4B4B;">400</span></div>
+      <div class="ramp-step" style="background:#9A9A9A;"><span style="color:#fff;">500</span></div>
+      <div class="ramp-step" style="background:#6B6B6B;"><span style="color:#fff;">600</span></div>
+      <div class="ramp-step" style="background:#4B4B4B;"><span style="color:#fff;">700</span></div>
+      <div class="ramp-step" style="background:#363636;"><span style="color:#fff;">800</span></div>
+      <div class="ramp-step" style="background:#262626;"><span style="color:#fff;">900</span></div>
+    </div>
+
+    <!-- Semantic colors -->
+    <span class="component-label" style="margin-top:12px;">Accent / semantic</span>
+    <div class="ramp" style="height:40px;">
+      <div class="ramp-step" style="background:#D76B5B;flex:2;"><span style="color:#fff;font-size:10px;">Clay #D76B5B</span></div>
+      <div class="ramp-step" style="background:#B85848;"><span style="color:#fff;font-size:10px;">Hover</span></div>
+      <div class="ramp-step" style="background:#349A03;flex:2;"><span style="color:#fff;font-size:10px;">Green #349A03</span></div>
+      <div class="ramp-step" style="background:#267602;"><span style="color:#fff;font-size:10px;">Hover</span></div>
+      <div class="ramp-step" style="background:#E21837;flex:2;"><span style="color:#fff;font-size:10px;">Red #E21837</span></div>
+      <div class="ramp-step" style="background:#B8112C;"><span style="color:#fff;font-size:10px;">Hover</span></div>
+      <div class="ramp-step" style="background:#ECF2F9;flex:2;"><span style="color:#3A6090;font-size:10px;">Ice #ECF2F9</span></div>
+    </div>
+
+    <span class="component-label" style="margin-top:12px;">Secondary accents</span>
+    <div class="ramp" style="height:40px;">
+      <div class="ramp-step" style="background:#1565c0;flex:2;"><span style="color:#fff;font-size:10px;">Blue #1565c0</span></div>
+      <div class="ramp-step" style="background:#0d47a1;"><span style="color:#fff;font-size:10px;">Darker</span></div>
+      <div class="ramp-step" style="background:#f9a825;flex:2;"><span style="color:#5a3e00;font-size:10px;">Amber #f9a825</span></div>
+      <div class="ramp-step" style="background:#e65100;"><span style="color:#fff;font-size:10px;">Deep</span></div>
+    </div>
+  </section>
+
+  <!-- ─────────────── TYPOGRAPHY ─────────────── -->
+  <section class="guide-section" id="typography">
+    <div class="section-header">
+      <div class="section-eyebrow">02 — Foundation</div>
+      <div class="section-title">Typography</div>
+      <div class="section-desc">Outfit (Google Fonts) is used as the system equivalent of Goodpast-Regular. It is a geometric sans-serif with clean proportions, legible at 11px and expressive at display sizes.</div>
+    </div>
+
+    <!-- Font family showcase -->
+    <div class="component-stage">
+      <span class="component-label">Outfit — weights</span>
+      <div class="weight-grid">
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:300;">Outfit</span>
+          <span class="weight-name">Light 300</span>
+        </div>
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:400;">Outfit</span>
+          <span class="weight-name">Regular 400</span>
+        </div>
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:500;">Outfit</span>
+          <span class="weight-name">Medium 500</span>
+        </div>
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:600;">Outfit</span>
+          <span class="weight-name">SemiBold 600</span>
+        </div>
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:700;">Outfit</span>
+          <span class="weight-name">Bold 700</span>
+        </div>
+        <div class="weight-item">
+          <span class="weight-sample" style="font-weight:800;">Outfit</span>
+          <span class="weight-name">ExtraBold 800</span>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;padding:20px;background:var(--smoke);border-radius:var(--radius-md);">
+        <div style="font-size:40px;font-weight:800;color:var(--black);letter-spacing:-0.03em;line-height:1.1;">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ</div>
+        <div style="font-size:36px;font-weight:400;color:var(--charcoal);letter-spacing:-0.01em;margin-top:6px;">abcdefghijklmnopqrstuvwxyz</div>
+        <div style="font-size:28px;font-weight:400;color:var(--gray-500);margin-top:6px;">0123456789 !@#$%&amp;.,;:—</div>
+      </div>
+    </div>
+
+    <!-- Type scale -->
+    <div class="component-stage">
+      <span class="component-label">Type scale</span>
+      <div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Display</span>
+            <span class="type-spec">56px / 800</span>
+          </div>
+          <div class="type-sample" style="font-size:56px;font-weight:800;letter-spacing:-0.03em;line-height:1;">Whitespace</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Heading 1</span>
+            <span class="type-spec">42px / 700</span>
+          </div>
+          <div class="type-sample" style="font-size:42px;font-weight:700;letter-spacing:-0.025em;line-height:1.1;">Sales Pipeline</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Heading 2</span>
+            <span class="type-spec">32px / 700</span>
+          </div>
+          <div class="type-sample" style="font-size:32px;font-weight:700;letter-spacing:-0.02em;">Account Overview</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Heading 3</span>
+            <span class="type-spec">24px / 600</span>
+          </div>
+          <div class="type-sample" style="font-size:24px;font-weight:600;letter-spacing:-0.01em;">Region Summary</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Heading 4</span>
+            <span class="type-spec">20px / 600</span>
+          </div>
+          <div class="type-sample" style="font-size:20px;font-weight:600;">District Roster</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Body MD</span>
+            <span class="type-spec">17px / 400</span>
+          </div>
+          <div class="type-sample" style="font-size:17px;">Prospect data is synced from Dynamics 365 every four hours.</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Body Base</span>
+            <span class="type-spec">15px / 400</span>
+          </div>
+          <div class="type-sample" style="font-size:15px;">Use this size for all standard UI copy — table cells, card text, form fields, and descriptions.</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Body SM</span>
+            <span class="type-spec">13px / 400</span>
+          </div>
+          <div class="type-sample" style="font-size:13px;">Helper text, modal notes, secondary detail. Minimum weight 400 at this size.</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Caption</span>
+            <span class="type-spec">11px / 600</span>
+          </div>
+          <div class="type-sample" style="font-size:11px;font-weight:600;letter-spacing:0.04em;">COLUMN HEADER · BADGE LABEL · EYEBROW TEXT</div>
+        </div>
+        <div class="type-row">
+          <div class="type-meta">
+            <span class="type-label">Mono</span>
+            <span class="type-spec">13px / 400</span>
+          </div>
+          <div class="type-sample" style="font-size:13px;font-family:var(--mono);color:var(--clay);">$124,500 · #D76B5B · ARR: 48,200</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text in context -->
+    <div class="col-2">
+      <div class="component-stage">
+        <span class="component-label">Text on light surface</span>
+        <div style="background:var(--white);padding:20px;border-radius:var(--radius-md);border:var(--border);">
+          <div style="font-size:18px;font-weight:700;color:var(--black);margin-bottom:8px;">Account Executive Report</div>
+          <div style="font-size:14px;color:var(--charcoal);line-height:1.65;margin-bottom:8px;">This district has 3 open whitespace opportunities across GPS Connect, Stopfinder, and Tripfinder. ARR potential is estimated at <strong style="color:var(--black);">$42,000</strong>.</div>
+          <div style="font-size:12px;color:var(--gray-500);">Last synced 4 hours ago · Q2 2026</div>
+        </div>
+      </div>
+      <div class="component-stage">
+        <span class="component-label">Text on dark surface</span>
+        <div style="background:var(--black);padding:20px;border-radius:var(--radius-md);">
+          <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px;">Account Executive Report</div>
+          <div style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.65;margin-bottom:8px;">This district has 3 open whitespace opportunities across GPS Connect, Stopfinder, and Tripfinder. ARR potential is estimated at <strong style="color:#D76B5B;">$42,000</strong>.</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.40);">Last synced 4 hours ago · Q2 2026</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── SPACING ─────────────── -->
+  <section class="guide-section" id="spacing">
+    <div class="section-header">
+      <div class="section-eyebrow">03 — Foundation</div>
+      <div class="section-title">Spacing</div>
+      <div class="section-desc">4px base unit. Use named tokens — never hardcode pixel values. Prefer --sp-3 (12px) for component internal gaps and --sp-5 (24px) between sections.</div>
+    </div>
+
+    <div class="component-stage">
+      <div class="spacing-row">
+        <span class="sp-token">--sp-1</span><span class="sp-px">4px</span>
+        <div class="sp-bar" style="width:4px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-2</span><span class="sp-px">8px</span>
+        <div class="sp-bar" style="width:8px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-3</span><span class="sp-px">12px</span>
+        <div class="sp-bar" style="width:12px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-4</span><span class="sp-px">16px</span>
+        <div class="sp-bar" style="width:16px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-5</span><span class="sp-px">24px</span>
+        <div class="sp-bar" style="width:24px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-6</span><span class="sp-px">32px</span>
+        <div class="sp-bar" style="width:32px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-7</span><span class="sp-px">48px</span>
+        <div class="sp-bar" style="width:48px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-8</span><span class="sp-px">64px</span>
+        <div class="sp-bar" style="width:64px;"></div>
+      </div>
+      <div class="spacing-row">
+        <span class="sp-token">--sp-9</span><span class="sp-px">96px</span>
+        <div class="sp-bar" style="width:96px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── ELEVATION ─────────────── -->
+  <section class="guide-section" id="elevation">
+    <div class="section-header">
+      <div class="section-eyebrow">04 — Foundation</div>
+      <div class="section-title">Radius &amp; Elevation</div>
+    </div>
+
+    <span class="component-label">Corner radius scale</span>
+    <div class="component-stage">
+      <div class="radius-grid">
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-xs);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-xs</span><span class="radius-px">2px</span></div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-sm);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-sm</span><span class="radius-px">4px</span></div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-md);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-md</span><span class="radius-px">6px</span></div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-lg);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-lg</span><span class="radius-px">10px</span></div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-xl);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-xl</span><span class="radius-px">16px</span></div>
+        </div>
+        <div class="radius-item">
+          <div class="radius-box" style="border-radius:var(--radius-full);"></div>
+          <div class="radius-label"><span class="radius-token">--radius-full</span><span class="radius-px">999px</span></div>
+        </div>
+      </div>
+    </div>
+
+    <span class="component-label" style="margin-top:12px;">Shadow scale</span>
+    <div class="component-stage">
+      <div class="shadow-grid">
+        <div class="shadow-item">
+          <div class="shadow-box" style="box-shadow:var(--shadow-xs);"></div>
+          <span class="shadow-token">--shadow-xs</span>
+        </div>
+        <div class="shadow-item">
+          <div class="shadow-box" style="box-shadow:var(--shadow-sm);"></div>
+          <span class="shadow-token">--shadow-sm</span>
+        </div>
+        <div class="shadow-item">
+          <div class="shadow-box" style="box-shadow:var(--shadow-md);"></div>
+          <span class="shadow-token">--shadow-md</span>
+        </div>
+        <div class="shadow-item">
+          <div class="shadow-box" style="box-shadow:var(--shadow-lg);"></div>
+          <span class="shadow-token">--shadow-lg</span>
+        </div>
+        <div class="shadow-item">
+          <div class="shadow-box" style="box-shadow:var(--shadow-xl);"></div>
+          <span class="shadow-token">--shadow-xl</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── BUTTONS ─────────────── -->
+  <section class="guide-section" id="buttons">
+    <div class="section-header">
+      <div class="section-eyebrow">05 — Components</div>
+      <div class="section-title">Buttons</div>
+      <div class="section-desc">Terracotta for primary CTAs. Ghost and secondary for lower-hierarchy actions. Red only for destructive, irreversible operations.</div>
+    </div>
+
+    <div class="component-stage">
+      <span class="component-label">Variants</span>
+      <div class="btn-row">
+        <button class="btn btn-md btn-primary">Primary</button>
+        <button class="btn btn-md btn-secondary">Secondary</button>
+        <button class="btn btn-md btn-ghost">Ghost</button>
+        <button class="btn btn-md btn-danger">Danger</button>
+        <button class="btn btn-md btn-success">Success</button>
+      </div>
+
+      <span class="component-label" style="margin-top:20px;">Sizes</span>
+      <div class="btn-row">
+        <button class="btn btn-sm btn-primary">Small</button>
+        <button class="btn btn-md btn-primary">Medium</button>
+        <button class="btn btn-lg btn-primary">Large</button>
+      </div>
+
+      <span class="component-label" style="margin-top:20px;">States</span>
+      <div class="btn-row">
+        <button class="btn btn-md btn-primary">Default</button>
+        <button class="btn btn-md btn-primary" style="background:var(--clay-dark);border-color:var(--clay-dark);">Hover</button>
+        <button class="btn btn-md btn-primary" disabled>Disabled</button>
+        <button class="btn btn-md btn-ghost" style="background:var(--smoke);border-color:var(--gray-400);">Ghost Hover</button>
+        <button class="btn btn-md btn-ghost" disabled>Ghost Disabled</button>
+      </div>
+
+      <span class="component-label" style="margin-top:20px;">With icons</span>
+      <div class="btn-row">
+        <button class="btn btn-md btn-primary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
+          New Opportunity
+        </button>
+        <button class="btn btn-md btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v2a1 1 0 01-1 1H3a1 1 0 01-1-1V9M9 5L7 3M7 3L5 5M7 3v7"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-md btn-ghost">✉ Email Selected</button>
+        <button class="btn btn-sm btn-danger">✕ Delete</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── INPUTS ─────────────── -->
+  <section class="guide-section" id="inputs">
+    <div class="section-header">
+      <div class="section-eyebrow">06 — Components</div>
+      <div class="section-title">Inputs &amp; Selects</div>
+      <div class="section-desc">Focus ring uses terracotta at 16% opacity. Labels are 12px/600 in charcoal. Hint text is 12px/400 in gray-500.</div>
+    </div>
+
+    <div class="col-2">
+      <div class="component-stage">
+        <span class="component-label">Text inputs</span>
+        <div class="input-group">
+          <div class="input-wrap">
+            <label class="input-label">District name</label>
+            <input class="input" type="text" placeholder="e.g. Albany City School District">
+            <span class="input-hint">Search by district or account name</span>
+          </div>
+          <div class="input-wrap">
+            <label class="input-label">Account executive</label>
+            <input class="input" type="text" value="Sarah Chen" style="border-color:var(--clay);box-shadow:0 0 0 3px rgba(215,107,91,0.16);">
+            <span class="input-hint">Active / focused state</span>
+          </div>
+          <div class="input-wrap">
+            <label class="input-label">ARR estimate</label>
+            <input class="input input-error" type="text" value="abc" placeholder="$0">
+            <span class="input-hint error">Must be a valid dollar amount</span>
+          </div>
+          <div class="input-wrap">
+            <label class="input-label" style="color:var(--gray-400);">Disabled field</label>
+            <input class="input" type="text" value="Read only value" disabled>
+          </div>
+        </div>
+      </div>
+
+      <div class="component-stage">
+        <span class="component-label">Select &amp; textarea</span>
+        <div class="input-group">
+          <div class="input-wrap">
+            <label class="input-label">State</label>
+            <select class="select">
+              <option value="">All states</option>
+              <option selected>New York</option>
+              <option>New Jersey</option>
+              <option>Connecticut</option>
+            </select>
+          </div>
+          <div class="input-wrap">
+            <label class="input-label">Pipeline phase</label>
+            <select class="select">
+              <option>All phases</option>
+              <option>Discovery</option>
+              <option selected>Proposal</option>
+              <option>Negotiation</option>
+              <option>Closed Won</option>
+            </select>
+          </div>
+          <div class="input-wrap">
+            <label class="input-label">Notes</label>
+            <textarea class="input" rows="3" placeholder="Internal notes for this account…" style="resize:vertical;height:auto;line-height:1.5;"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── CHECKBOXES / RADIO ─────────────── -->
+  <section class="guide-section" id="selections">
+    <div class="section-header">
+      <div class="section-eyebrow">07 — Components</div>
+      <div class="section-title">Checkboxes &amp; Radios</div>
+    </div>
+
+    <div class="col-2">
+      <div class="component-stage">
+        <span class="component-label">Checkboxes</span>
+        <div class="check-group">
+          <label class="check-item">
+            <div class="check-box"></div>
+            Unchecked
+          </label>
+          <label class="check-item checked">
+            <div class="check-box">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </div>
+            Checked — GPS Connect
+          </label>
+          <label class="check-item checked">
+            <div class="check-box">
+              <svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>
+            </div>
+            Checked — Stopfinder
+          </label>
+          <label class="check-item" style="opacity:0.42;cursor:not-allowed;">
+            <div class="check-box"></div>
+            Disabled
+          </label>
+        </div>
+      </div>
+
+      <div class="component-stage">
+        <span class="component-label">Radio buttons</span>
+        <div class="check-group">
+          <label class="check-item radio-on">
+            <div class="radio-box"><div class="radio-dot"></div></div>
+            All account executives
+          </label>
+          <label class="check-item">
+            <div class="radio-box"></div>
+            Sarah Chen
+          </label>
+          <label class="check-item">
+            <div class="radio-box"></div>
+            Marcus Reid
+          </label>
+          <label class="check-item" style="opacity:0.42;cursor:not-allowed;">
+            <div class="radio-box"></div>
+            Disabled option
+          </label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── BADGES & ALERTS ─────────────── -->
+  <section class="guide-section" id="badges">
+    <div class="section-header">
+      <div class="section-eyebrow">08 — Components</div>
+      <div class="section-title">Badges &amp; Alerts</div>
+    </div>
+
+    <div class="component-stage">
+      <span class="component-label">Badges</span>
+      <div class="badge-row">
+        <span class="badge badge-neutral">Neutral</span>
+        <span class="badge badge-accent">● Terracotta</span>
+        <span class="badge badge-success">✓ Success</span>
+        <span class="badge badge-warning">⚠ Warning</span>
+        <span class="badge badge-danger">✕ Danger</span>
+        <span class="badge badge-ice">ℹ Info</span>
+      </div>
+
+      <div class="badge-row" style="margin-top:12px;">
+        <span class="badge badge-neutral">Client</span>
+        <span class="badge badge-success">Tier 2 — Sold</span>
+        <span class="badge badge-accent">Tier 1 — Gap</span>
+        <span class="badge badge-danger">No Product</span>
+        <span class="badge badge-ice">Prospect</span>
+        <span class="badge badge-warning">Review Needed</span>
+        <span class="badge badge-neutral">Unassigned</span>
+      </div>
+    </div>
+
+    <div class="component-stage" style="margin-top:var(--sp-4);">
+      <span class="component-label">Alerts</span>
+      <div class="alert alert-info">
+        <span class="alert-icon">ℹ</span>
+        <div class="alert-body">
+          <strong>Data synced 4 hours ago</strong>
+          <p>Account data is updated from Dynamics 365 on a four-hour schedule. Some records may not reflect today's activity.</p>
+        </div>
+      </div>
+      <div class="alert alert-success">
+        <span class="alert-icon">✓</span>
+        <div class="alert-body">
+          <strong>Opportunity logged</strong>
+          <p>GPS Connect has been added to the pipeline for Albany City School District. Close date set to 2026-08-15.</p>
+        </div>
+      </div>
+      <div class="alert alert-warning">
+        <span class="alert-icon">⚠</span>
+        <div class="alert-body">
+          <strong>Incomplete account data</strong>
+          <p>14 accounts are missing latitude/longitude coordinates and will not appear on the whitespace map.</p>
+        </div>
+      </div>
+      <div class="alert alert-danger">
+        <span class="alert-icon">✕</span>
+        <div class="alert-body">
+          <strong>Failed to load accounts</strong>
+          <p>Authentication token has expired. Please refresh the page and log in again.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────── TABLE ─────────────── -->
+  <section class="guide-section" id="table">
+    <div class="section-header">
+      <div class="section-eyebrow">09 — Patterns</div>
+      <div class="section-title">Data Table</div>
+      <div class="section-desc">Tabulator 6.3.0 with the Graphite theme applied. Ice (#ECF2F9) header, smoke alternating rows, terracotta active pagination and focus rings. Sortable and filterable.</div>
+    </div>
+
+    <div class="component-stage" style="overflow:hidden;">
+      <div class="table-controls">
+        <input class="ctrl-input" type="text" placeholder="🔍 Search district or AE…" id="tblSearch">
+        <select class="ctrl-select" id="tblState">
+          <option value="">All states</option>
+          <option>NY</option><option>NJ</option><option>CT</option>
+          <option>PA</option><option>MA</option><option>OH</option>
+        </select>
+        <select class="ctrl-select" id="tblStatus">
+          <option value="">All statuses</option>
+          <option>Open</option><option>Won</option>
+          <option>Lost</option><option>Prospect</option>
+        </select>
+      </div>
+      <div id="tabulator-demo"></div>
+    </div>
+  </section>
+
+  <!-- ─────────────── LOGO ─────────────── -->
+  <section class="guide-section" id="logo">
+    <div class="section-header">
+      <div class="section-eyebrow">10 — Brand</div>
+      <div class="section-title">Logo Usage</div>
+      <div class="section-desc">Two approved wordmark variants: <strong>tflogogrey.png</strong> for light surfaces, <strong>tflogowhite.png</strong> for dark or colored surfaces. Never place the grey logo on dark backgrounds.</div>
+    </div>
+
+    <div class="logo-grid">
+      <!-- Grey logo on light -->
+      <div class="logo-stage" style="background:var(--white);">
+        <div>
+          <div class="logo-stage-title" style="color:var(--gray-500);">Grey logo · light surfaces</div>
+          <div class="logo-size-row" style="margin-top:12px;">
+            <div class="logo-size-item logo-md">
+              <img src="tflogogrey.png" alt="Transfinder">
+              <span class="logo-size-label" style="color:var(--gray-500);">md · 36px</span>
+            </div>
+            <div class="logo-size-item logo-lg">
+              <img src="tflogogrey.png" alt="Transfinder">
+              <span class="logo-size-label" style="color:var(--gray-500);">lg · 52px</span>
+            </div>
+            <div class="logo-size-item logo-xl">
+              <img src="tflogogrey.png" alt="Transfinder">
+              <span class="logo-size-label" style="color:var(--gray-500);">xl · 72px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grey logo on ice -->
+      <div class="logo-stage" style="background:var(--ice);">
+        <div>
+          <div class="logo-stage-title" style="color:var(--gray-500);">Grey logo · ice surface (#ECF2F9)</div>
+          <div class="logo-size-row" style="margin-top:12px;">
+            <div class="logo-size-item logo-md"><img src="tflogogrey.png" alt="Transfinder"><span class="logo-size-label" style="color:var(--gray-500);">md</span></div>
+            <div class="logo-size-item logo-lg"><img src="tflogogrey.png" alt="Transfinder"><span class="logo-size-label" style="color:var(--gray-500);">lg</span></div>
+            <div class="logo-size-item logo-xl"><img src="tflogogrey.png" alt="Transfinder"><span class="logo-size-label" style="color:var(--gray-500);">xl</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- White logo on dark backgrounds -->
+    <span class="component-label">White logo · dark &amp; colored surfaces</span>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-3);margin-bottom:var(--sp-5);">
+      <div class="logo-stage bg-black" style="border:none;">
+        <div class="logo-stage-title" style="color:rgba(255,255,255,0.35);font-size:10px;">Black #262626</div>
+        <img src="tflogowhite.png" alt="Transfinder" style="height:72px;width:auto;max-width:100%;object-fit:contain;object-position:left;display:block;margin-top:8px;">
+      </div>
+      <div class="logo-stage bg-charcoal" style="border:none;">
+        <div class="logo-stage-title" style="color:rgba(255,255,255,0.35);font-size:10px;">Charcoal #4B4B4B</div>
+        <img src="tflogowhite.png" alt="Transfinder" style="height:72px;width:auto;max-width:100%;object-fit:contain;object-position:left;display:block;margin-top:8px;">
+      </div>
+      <div class="logo-stage bg-graphite" style="border:none;">
+        <div class="logo-stage-title" style="color:rgba(255,255,255,0.35);font-size:10px;">Deep Graphite #1A1A1A</div>
+        <img src="tflogowhite.png" alt="Transfinder" style="height:72px;width:auto;max-width:100%;object-fit:contain;object-position:left;display:block;margin-top:8px;">
+      </div>
+    </div>
+
+    <!-- Usage rules -->
+    <div class="usage-grid">
+      <div class="usage-card do">
+        <div class="usage-label">✓ Do</div>
+        <ul>
+          <li>Use grey logo on white, smoke (#F2F2F2), and ice (#ECF2F9) backgrounds</li>
+          <li>Use white logo on black, charcoal, terracotta, and graphite backgrounds</li>
+          <li>Maintain minimum logo height of 36px (md)</li>
+          <li>Keep clear space equal to the height of the "f" mark on all sides</li>
+        </ul>
+      </div>
+      <div class="usage-card dont">
+        <div class="usage-label">✕ Don't</div>
+        <ul>
+          <li>Don't place the grey logo on dark or colored backgrounds</li>
+          <li>Don't place the white logo on terracotta — the orange "f" mark lacks sufficient contrast</li>
+          <li>Don't stretch, rotate, or recolor the wordmark</li>
+          <li>Don't use the logo below 36px height</li>
+          <li>Don't place on low-contrast backgrounds that reduce legibility</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+/* ── Nav active state on scroll ── */
+const sections = document.querySelectorAll('.guide-section');
+const navLinks  = document.querySelectorAll('.nav-link');
+
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const target = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if (target) target.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+
+sections.forEach(s => obs.observe(s));
+
+/* ── Swatch copy toast ── */
+document.querySelectorAll('.swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    const hex = sw.querySelector('.swatch-hex')?.textContent;
+    if (!hex) return;
+    navigator.clipboard.writeText(hex).catch(() => {});
+    const body = sw.querySelector('.swatch-body');
+    const prev = body.style.background;
+    body.style.background = '#ECF2F9';
+    setTimeout(() => { body.style.background = prev; }, 600);
+  });
+});
+
+/* ── Tabulator demo ── */
+const PIPELINE = [
+  { district:"Albany City USD",    state:"NY", ae:"Sarah Chen",  product:"GPS Connect",    arr:42000, status:"Open",     close:"2026-08-15" },
+  { district:"Bethlehem Central",  state:"NY", ae:"Sarah Chen",  product:"Stopfinder",     arr:18500, status:"Prospect",  close:"2026-09-01" },
+  { district:"Princeton Regional", state:"NJ", ae:"Marcus Reid", product:"Routefinder+",   arr:95000, status:"Won",      close:"2026-06-30" },
+  { district:"Hartford Public",    state:"CT", ae:"Lena Park",   product:"Tripfinder",     arr:31000, status:"Open",     close:"2026-10-01" },
+  { district:"Pittsburgh USD",     state:"PA", ae:"Marcus Reid", product:"Viewfinder",     arr:22000, status:"Lost",     close:"2026-05-15" },
+  { district:"Amherst-Pelham",     state:"MA", ae:"Lena Park",   product:"Infofinder i",  arr:14000, status:"Prospect", close:"2026-11-01" },
+  { district:"Columbus City",      state:"OH", ae:"Tom Walsh",   product:"GPS Connect",    arr:67000, status:"Open",     close:"2026-07-30" },
+  { district:"Yonkers Public",     state:"NY", ae:"Sarah Chen",  product:"Stopfinder",     arr:53000, status:"Open",     close:"2026-08-01" },
+  { district:"Trenton City",       state:"NJ", ae:"Marcus Reid", product:"Servicefinder",  arr:29000, status:"Prospect", close:"2026-12-01" },
+  { district:"Stamford Public",    state:"CT", ae:"Lena Park",   product:"Wayfinder",      arr:38500, status:"Won",      close:"2026-04-01" },
+  { district:"Erie City",          state:"PA", ae:"Tom Walsh",   product:"TF Hardware",    arr:11000, status:"Open",     close:"2026-09-15" },
+  { district:"Springfield USD",    state:"MA", ae:"Tom Walsh",   product:"Viewfinder",     arr:19500, status:"Lost",     close:"2026-03-01" },
+];
+
+function statusFmt(cell) {
+  const v = cell.getValue();
+  const map = { Open:'status-open', Won:'status-won', Lost:'status-lost', Prospect:'status-prospect' };
+  return `<span class="status-pill ${map[v]||''}">${v}</span>`;
+}
+
+function arrFmt(cell) {
+  return `$${Number(cell.getValue()).toLocaleString()}`;
+}
+
+let tbl;
+document.addEventListener('DOMContentLoaded', () => {
+  tbl = new Tabulator('#tabulator-demo', {
+    data: PIPELINE,
+    layout: 'fitColumns',
+    height: '380px',
+    pagination: 'local',
+    paginationSize: 8,
+    columns: [
+      { title:'District',   field:'district', headerFilter:'input', minWidth:180 },
+      { title:'State',      field:'state',    headerFilter:'select',
+        headerFilterParams:{ values: { '':'All','NY':'NY','NJ':'NJ','CT':'CT','PA':'PA','MA':'MA','OH':'OH' } },
+        width:80 },
+      { title:'AE',         field:'ae',       headerFilter:'input', minWidth:120 },
+      { title:'Product',    field:'product',  headerFilter:'input', minWidth:140 },
+      { title:'ARR',        field:'arr',      formatter:arrFmt,
+        sorter:'number', hozAlign:'right', width:110 },
+      { title:'Status',     field:'status',   formatter:statusFmt,
+        headerFilter:'select',
+        headerFilterParams:{ values:{ '':'All','Open':'Open','Won':'Won','Lost':'Lost','Prospect':'Prospect' } },
+        width:120 },
+      { title:'Close Date', field:'close',    sorter:'date',
+        sorterParams:{ format:'YYYY-MM-DD' }, width:120 },
+    ],
+  });
+
+  document.getElementById('tblSearch').addEventListener('input', e => {
+    const v = e.target.value;
+    tbl.setFilter([
+      [
+        { field:'district', type:'like', value:v },
+        { field:'ae',       type:'like', value:v },
+      ]
+    ]);
+  });
+
+  document.getElementById('tblState').addEventListener('change', e => {
+    tbl.getColumn('state').headerFilterFunc = () => true;
+    if (e.target.value) tbl.setFilter('state','=',e.target.value);
+    else tbl.clearFilter(true);
+  });
+
+  document.getElementById('tblStatus').addEventListener('change', e => {
+    if (e.target.value) tbl.setFilter('status','=',e.target.value);
+    else tbl.clearFilter(true);
+  });
+});
+</script>
+</body>
+</html>
