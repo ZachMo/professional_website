@@ -1,0 +1,2659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Whitespace Map — Portfolio Demo</title>
+  <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+
+  <!--
+    PORTFOLIO DEMO BUILD
+    This is a standalone demonstration version of an internal sales tool.
+    All data is fictional and generated locally in the browser — there are
+    no API calls, no authentication, and no connection to any live system.
+  -->
+
+  <style>
+    /* ── Graphite design tokens ── */
+    :root {
+      --black:       #262626;
+      --charcoal:    #4B4B4B;
+      --silver:      #D6D6D6;
+      --smoke:       #F2F2F2;
+      --ice:         #ECF2F9;
+      --white:       #FFFFFF;
+      --clay:        #D76B5B;
+      --clay-dark:   #B85848;
+      --green:       #349A03;
+      --green-dark:  #267602;
+      --red:         #E21837;
+      --red-dark:    #B8112C;
+      --gray-200:    #E8E8E8;
+      --gray-400:    #BFBFBF;
+      --gray-500:    #9A9A9A;
+      --sans: 'Outfit', system-ui, -apple-system, sans-serif;
+
+      /* Legacy aliases — keep existing var() usages working */
+      --panel-bg:       var(--white);
+      --page-bg:        var(--smoke);
+      --text:           var(--charcoal);
+      --shadow:         0 4px 14px rgba(38,38,38,0.10);
+      --border:         var(--silver);
+      --header:         var(--black);
+      --muted:          var(--gray-500);
+      --accent:         var(--clay);
+      --ws-amber:       var(--clay);
+      --ws-amber-bg:    rgba(215,107,91,0.10);
+      --ws-gap:         var(--red);
+      --ws-gap-bg:      rgba(226,24,55,0.08);
+      --sold-green:     var(--green);
+      --sold-green-bg:  rgba(52,154,3,0.10);
+      --tbd-color:      var(--gray-500);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--page-bg);
+      color: var(--text);
+      padding: 10px;
+      min-height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1900px;
+      margin: 0 auto;
+      height: calc(100vh - 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Top header bar ── */
+    #topBar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--white);
+      border-radius: 10px;
+      padding: 8px 16px;
+      box-shadow: 0 1px 4px rgba(38,38,38,0.08);
+      border: 1px solid var(--silver);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── Portfolio demo badge ── */
+    #demoBadge {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--clay-dark);
+      background: rgba(215,107,91,0.10);
+      border: 1px solid rgba(215,107,91,0.35);
+      border-radius: 999px;
+      padding: 3px 12px;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 860px) {
+      #demoBadge { display: none; }
+    }
+
+    .top-bar-spacer { flex: 1; }
+
+    .top-bar-btn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 12px;
+      height: 30px;
+      border-radius: 4px;
+      border: 1px solid var(--silver);
+      background: transparent;
+      color: var(--charcoal);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: border-color 0.13s, color 0.13s, background 0.13s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .top-bar-btn:hover { background: var(--smoke); border-color: var(--gray-400); }
+
+    #suggestionsBtn {
+      border-color: rgba(215,107,91,0.38);
+      color: var(--clay);
+    }
+    #suggestionsBtn:hover {
+      border-color: var(--clay);
+      background: rgba(215,107,91,0.08);
+      color: var(--clay-dark);
+    }
+
+    #tourBtn:hover { border-color: var(--clay); color: var(--clay); }
+
+
+    /* ── Main grid card ── */
+    #mainArea {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: row;
+      gap: 10px;
+    }
+
+    #gridPane {
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: 10px;
+      padding: 16px 20px 20px;
+      box-shadow: 0 1px 4px rgba(38,38,38,0.08);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid var(--silver);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--black);
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+
+    .count-pill {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--black);
+      background: var(--ice);
+      border: 1px solid var(--silver);
+      padding: 2px 10px;
+      border-radius: 999px;
+      line-height: 1.4;
+    }
+
+    .count-pill .muted { color: var(--gray-500); font-weight: 700; margin-right: 4px; }
+    .count-pill .muted.r { margin-right: 0; margin-left: 4px; }
+
+    .btn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--charcoal);
+      background: var(--white);
+      border: 1px solid var(--silver);
+      border-radius: 4px;
+      padding: 5px 14px;
+      cursor: pointer;
+      height: 32px;
+      white-space: nowrap;
+      transition: background 0.13s, border-color 0.13s;
+    }
+
+    .btn:hover { background: var(--smoke); border-color: var(--gray-400); }
+    .btn.secondary { background: var(--ice); border-color: var(--silver); }
+
+    #dataTable {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* ── Tabulator — Graphite theme ── */
+    .tabulator {
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--silver) !important;
+      height: 100% !important;
+      font-family: var(--sans) !important;
+    }
+
+    .tabulator .tabulator-header {
+      background: var(--ice) !important;
+      border-bottom: 1px solid var(--silver) !important;
+    }
+
+    .tabulator .tabulator-col {
+      background: transparent !important;
+      border-right-color: var(--silver) !important;
+    }
+
+    .tabulator .tabulator-col-title {
+      font-family: var(--sans) !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.06em !important;
+      text-transform: uppercase !important;
+      color: var(--gray-500) !important;
+    }
+
+    .tabulator .tabulator-row {
+      background: var(--white) !important;
+      color: var(--charcoal) !important;
+      font-size: 13px !important;
+    }
+
+    .tabulator .tabulator-row.tabulator-row-even { background: var(--smoke) !important; }
+    .tabulator .tabulator-row:hover { background: var(--ice) !important; }
+
+    .tabulator .tabulator-row.tabulator-selected {
+      background: rgba(215,107,91,0.08) !important;
+    }
+
+    .tabulator .tabulator-cell { border-right-color: var(--silver) !important; }
+
+    .tabulator .tabulator-footer {
+      background: var(--ice) !important;
+      border-top: 1px solid var(--silver) !important;
+      font-family: var(--sans) !important;
+      font-size: 12px !important;
+      color: var(--gray-500) !important;
+    }
+
+    .tabulator .tabulator-page {
+      border: 1px solid var(--silver) !important;
+      border-radius: 4px !important;
+      font-family: var(--sans) !important;
+      font-size: 12px !important;
+      color: var(--charcoal) !important;
+      background: var(--white) !important;
+    }
+
+    .tabulator .tabulator-page.active {
+      background: var(--clay) !important;
+      color: #fff !important;
+      border-color: var(--clay-dark) !important;
+    }
+
+    .tabulator .tabulator-header-filter input,
+    .tabulator .tabulator-header-filter select {
+      font-family: var(--sans) !important;
+      font-size: 12px !important;
+      padding: 4px 6px !important;
+      border-radius: 4px !important;
+      border: 1px solid var(--silver) !important;
+      outline: none !important;
+      background: var(--white) !important;
+      color: var(--charcoal) !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      transition: border-color 0.13s !important;
+    }
+
+    .tabulator .tabulator-header-filter input:focus,
+    .tabulator .tabulator-header-filter select:focus {
+      border-color: var(--clay) !important;
+      box-shadow: 0 0 0 2px rgba(215,107,91,0.16) !important;
+    }
+
+    /* ── Product cell formatters — Graphite ── */
+    .cell-sold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(52,154,3,0.10);
+      border: 1px solid rgba(52,154,3,0.30);
+    }
+
+    .cell-sold svg {
+      width: 12px; height: 12px;
+      stroke: var(--green); fill: none;
+      stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
+    }
+
+    .cell-ws {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      background: rgba(226,24,55,0.08);
+      border: 1.5px dashed var(--red);
+      cursor: pointer;
+      transition: background 0.13s;
+    }
+
+    .cell-ws:hover { background: rgba(226,24,55,0.16); }
+
+    .cell-ws svg {
+      width: 12px; height: 12px;
+      stroke: var(--red); fill: none;
+      stroke-width: 2; stroke-linecap: round;
+    }
+
+    .cell-tbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      background: var(--smoke);
+      border: 1px solid var(--silver);
+      font-size: 0.58rem;
+      font-weight: 700;
+      color: var(--gray-500);
+    }
+
+    .cell-tier1 {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px; height: 26px;
+      border-radius: 4px;
+      background: rgba(215,107,91,0.10);
+      border: 1.5px solid var(--clay);
+    }
+
+    /* ── Loading overlay ── */
+    #loadingOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(242,242,242,0.88);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    #loadingOverlay.hidden { display: none; }
+
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--silver);
+      border-top-color: var(--clay);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-msg {
+      font-size: 13px;
+      color: var(--gray-500);
+      font-weight: 600;
+    }
+
+    /* ── Modal base ── */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+    }
+
+    .modal-box {
+      background: var(--white);
+      margin: 10% auto;
+      padding: 28px 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 420px;
+      box-shadow: 0 10px 28px rgba(38,38,38,0.12);
+      border: 1px solid var(--silver);
+    }
+
+    .modal-box h2 { font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--black); }
+
+    .modal-box label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--black);
+      margin-top: 11px;
+      margin-bottom: 4px;
+    }
+
+    .modal-box label:first-of-type { margin-top: 0; }
+
+    .modal-box input[type="text"],
+    .modal-box input[type="number"],
+    .modal-box input[type="date"],
+    .modal-box select {
+      width: 100%;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: var(--sans);
+      border: 1px solid var(--silver);
+      border-radius: 4px;
+      outline: none;
+      box-sizing: border-box;
+      color: var(--charcoal);
+      background: var(--white);
+      transition: border-color 0.13s, box-shadow 0.13s;
+    }
+
+    .modal-box input:focus,
+    .modal-box select:focus {
+      border-color: var(--clay);
+      box-shadow: 0 0 0 3px rgba(215,107,91,0.16);
+    }
+
+    .modal-note {
+      font-size: 12px;
+      color: var(--gray-500);
+      margin-top: 11px;
+      line-height: 1.5;
+    }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+
+    .modal-actions button {
+      padding: 7px 18px;
+      font-size: 13px;
+      font-family: var(--sans);
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid var(--silver);
+      background: var(--white);
+      color: var(--charcoal);
+      font-weight: 600;
+      transition: background 0.13s, border-color 0.13s;
+    }
+
+    .modal-actions button:hover { background: var(--smoke); border-color: var(--gray-400); }
+
+    .modal-actions .btn-primary {
+      background: var(--clay);
+      color: #fff;
+      border-color: var(--clay-dark);
+    }
+
+    .modal-actions .btn-primary:hover { background: var(--clay-dark); }
+
+    .stat-chip {
+      background: var(--ice);
+      border-radius: 999px;
+      padding: 5px 14px;
+      border: 1px solid var(--silver);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .stat-chip strong { color: var(--black); font-size: 15px; font-weight: 700; }
+    .stat-chip strong.amber { color: var(--clay); }
+    .stat-chip strong.green { color: var(--green); }
+
+    .col-toggle {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 10px;
+      height: 26px;
+      border-radius: 999px;
+      border: 1px solid var(--silver);
+      background: var(--white);
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: background 0.13s, color 0.13s, border-color 0.13s;
+      white-space: nowrap;
+    }
+
+    .col-toggle:hover { border-color: var(--gray-400); color: var(--charcoal); background: var(--smoke); }
+
+    .col-toggle.on {
+      background: var(--clay);
+      color: #fff;
+      border-color: var(--clay-dark);
+    }
+
+
+    /* ── Tutorial & Suggestions ─────────────────────────────────────────────── */
+
+    #tutorialOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      pointer-events: auto;
+    }
+    #tutorialOverlay.active { display: block; }
+
+    #tutorialSpotlight {
+      display: none;
+      position: fixed;
+      border-radius: 10px;
+      box-shadow: 0 0 0 9999px rgba(11,15,26,0.84);
+      pointer-events: none;
+      z-index: 1201;
+      transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease;
+    }
+    #tutorialSpotlight.visible { display: block; }
+
+    #tutorialCard {
+      display: none;
+      position: fixed;
+      z-index: 1202;
+      background: #1a1a1a;
+      border: 1px solid rgba(215,107,91,0.25);
+      border-radius: 12px;
+      padding: 26px 26px 20px;
+      width: 90%;
+      max-width: 480px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      font-family: var(--sans);
+    }
+    #tutorialCard.visible { display: block; }
+
+    .tut-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .tut-step-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--clay);
+    }
+
+    .tut-skip {
+      font-size: 0.73rem;
+      color: rgba(226,232,240,0.35);
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .tut-skip:hover { color: rgba(226,232,240,0.65); }
+
+    #tutTitle {
+      font-family: var(--sans);
+      font-size: 1.22rem;
+      font-weight: 600;
+      color: #f1f5f9;
+      margin: 0 0 10px;
+      line-height: 1.32;
+    }
+
+    #tutContent {
+      font-size: 0.875rem;
+      color: rgba(226,232,240,0.8);
+      line-height: 1.68;
+      margin: 0;
+    }
+
+    .tut-dots {
+      display: flex;
+      gap: 5px;
+      margin-top: 18px;
+    }
+
+    .tut-dot {
+      flex: 1;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.1);
+      transition: background 0.2s;
+    }
+    .tut-dot.active { background: var(--clay); }
+    .tut-dot.done   { background: rgba(215,107,91,0.40); }
+
+    .tut-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      gap: 8px;
+    }
+
+    .tut-btn {
+      font-family: var(--sans);
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding: 8px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      line-height: 1;
+      transition: all 0.13s;
+    }
+
+    .tut-btn-back {
+      background: rgba(255,255,255,0.05);
+      color: rgba(226,232,240,0.55);
+      border: 1px solid rgba(255,255,255,0.10) !important;
+    }
+    .tut-btn-back:hover { background: rgba(255,255,255,0.09); color: rgba(226,232,240,0.85); }
+
+    .tut-btn-next { background: var(--clay); color: #fff; }
+    .tut-btn-next:hover { background: var(--clay-dark); }
+
+    .tut-btn-cta {
+      background: var(--clay);
+      color: #fff;
+      padding: 10px 28px;
+      font-size: 0.92rem;
+    }
+    .tut-btn-cta:hover { background: var(--clay-dark); transform: translateY(-1px); }
+
+    /* ── Suggestions modal ── */
+    #suggestionsModal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1100;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(5px);
+      align-items: center;
+      justify-content: center;
+    }
+    #suggestionsModal.active { display: flex; }
+
+    #suggestionsPanel {
+      background: #1a1a1a;
+      border: 1px solid rgba(215,107,91,0.22);
+      border-radius: 12px;
+      padding: 26px 26px 22px;
+      width: 90%;
+      max-width: 520px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.50);
+      font-family: var(--sans);
+    }
+
+    .sugg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .sugg-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--clay);
+    }
+
+    .sugg-close {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      color: rgba(226,232,240,0.45);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      transition: all 0.13s;
+      flex-shrink: 0;
+    }
+    .sugg-close:hover { background: rgba(255,255,255,0.09); color: #e2e8f0; }
+
+    #suggestionText {
+      font-size: 0.9rem;
+      color: rgba(226,232,240,0.82);
+      line-height: 1.72;
+      min-height: 110px;
+      transition: opacity 0.13s;
+    }
+
+    .sugg-footer { margin-top: 18px; }
+
+    #newIdeaBtn {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 4px;
+      border: 1px solid rgba(215,107,91,0.35);
+      background: rgba(215,107,91,0.08);
+      color: var(--clay);
+      cursor: pointer;
+      transition: all 0.13s;
+    }
+    #newIdeaBtn:hover { background: rgba(215,107,91,0.15); border-color: var(--clay); color: var(--clay-dark); }
+
+    @media (max-width: 700px) {
+      #tutorialCard    { max-width: calc(100vw - 32px); padding: 20px 16px 16px; }
+      #suggestionsPanel { max-width: calc(100vw - 32px); padding: 20px 16px 16px; }
+      #tourBtn         { display: none; }
+    }
+
+    /* ── Whitespace Map panel (right side) ───────────────────────────────── */
+    .ws-map-panel {
+      flex: 0 0 460px;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 10px;
+      overflow: visible;
+      border: 1px solid var(--silver);
+      background: var(--white);
+      box-shadow: 0 1px 4px rgba(38,38,38,0.08);
+      position: relative;
+    }
+    .ws-map-panel.is-hidden { display: none; }
+    #mainArea.map-maximized #gridPane { display: none; }
+    #mainArea.map-maximized .ws-map-panel { flex: 1; }
+
+    .ws-map-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--silver);
+      background: var(--ice);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-500);
+      border-radius: 10px 10px 0 0;
+      overflow: hidden;
+    }
+    .ws-map-header .ws-count { font-weight: 700; color: var(--black); white-space: nowrap; }
+    .ws-map-divider { flex: 1; }
+    .ws-map-header button {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 4px;
+      border: 1px solid var(--silver);
+      background: var(--white);
+      color: var(--charcoal);
+      cursor: pointer;
+      transition: all 0.13s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .ws-map-header button:hover { border-color: var(--clay); color: var(--clay); background: rgba(215,107,91,0.06); }
+    .ws-map-header button.draw-active {
+      background: var(--clay);
+      color: #fff;
+      border-color: var(--clay-dark);
+    }
+    .ws-map-header button.region-active {
+      background: var(--clay);
+      color: #fff;
+      border-color: var(--clay-dark);
+    }
+    .ws-map-header button.btn-close:hover { border-color: var(--red); color: var(--red); background: rgba(226,24,55,0.06); }
+    #wsViewDiv { flex: 1; min-height: 0; border-radius: 0 0 10px 10px; overflow: hidden; }
+
+    /* draw instructions bar */
+    .ws-draw-hint {
+      display: none;
+      position: absolute;
+      top: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      background: rgba(38,38,38,0.86);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 999px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .ws-draw-hint.visible { display: block; }
+
+    /* radius input dialog */
+    .ws-radius-dialog {
+      display: none;
+      position: absolute;
+      top: 42px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 20;
+      background: var(--white);
+      border: 1px solid var(--silver);
+      border-radius: 6px;
+      padding: 12px 14px;
+      box-shadow: 0 4px 14px rgba(38,38,38,0.12);
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .ws-radius-dialog.visible { display: flex; }
+    .ws-radius-dialog input {
+      width: 64px;
+      font-family: var(--sans);
+      font-size: 13px;
+      padding: 4px 8px;
+      border: 1px solid var(--silver);
+      border-radius: 4px;
+      outline: none;
+      text-align: center;
+      transition: border-color 0.13s, box-shadow 0.13s;
+    }
+    .ws-radius-dialog input:focus {
+      border-color: var(--clay);
+      box-shadow: 0 0 0 2px rgba(215,107,91,0.16);
+    }
+    .ws-radius-dialog .rd-apply {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 4px;
+      border: 1px solid var(--clay-dark);
+      background: var(--clay);
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.13s;
+    }
+    .ws-radius-dialog .rd-apply:hover { background: var(--clay-dark); }
+    .ws-radius-dialog .rd-cancel {
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--silver);
+      background: var(--white);
+      color: var(--gray-500);
+      cursor: pointer;
+      transition: background 0.13s;
+    }
+    .ws-radius-dialog .rd-cancel:hover { background: var(--smoke); }
+
+    /* resize handle on left edge of map panel */
+    #wsResizeHandle {
+      position: absolute;
+      left: -5px;
+      top: 0;
+      bottom: 0;
+      width: 10px;
+      cursor: ew-resize;
+      z-index: 30;
+      border-radius: 4px;
+    }
+    #wsResizeHandle::after {
+      content: "";
+      position: absolute;
+      left: 4px;
+      top: 20%;
+      bottom: 20%;
+      width: 2px;
+      border-radius: 999px;
+      background: transparent;
+      transition: background 0.13s;
+    }
+    #wsResizeHandle:hover::after { background: var(--clay); }
+    body.ws-resizing #wsResizeHandle::after { background: var(--clay); }
+    body.ws-resizing { cursor: ew-resize !important; user-select: none !important; }
+    #mainArea.map-maximized #wsResizeHandle { display: none; }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <div class="loading-msg" id="loadingMsg">Loading client accounts…</div>
+    </div>
+
+    <!-- Top header bar -->
+    <div id="topBar">
+      <span class="brand-title">Whitespace Map</span>
+      <span id="demoBadge" title="This is a standalone portfolio sample. Every account, person, and metric is fictional and generated locally in your browser.">Portfolio demo — all data is fictional sample data</span>
+      <div class="top-bar-spacer"></div>
+      <button id="tourBtn" class="top-bar-btn" onclick="launchTutorial(true)" title="Relaunch the product tour">↺ Tour</button>
+      <button id="suggestionsBtn" class="top-bar-btn" onclick="openSuggestions()">💡 Suggestions</button>
+    </div>
+
+    <!-- Stats strip -->
+    <div id="statsStrip" style="display:flex;gap:10px;flex-shrink:0;"></div>
+
+    <div id="mainArea">
+
+    <!-- Main grid -->
+    <div id="gridPane">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Whitespace Map</span>
+          <span class="count-pill" id="oppCount">
+            <span class="muted">(</span>0<span class="muted r">)</span>
+          </span>
+          <select id="aeFilter" onchange="onAEDropdown(this.value)" style="font-family:var(--sans);font-size:13px;padding:5px 10px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--charcoal);outline:none;height:32px;min-width:160px;cursor:pointer;">
+            <option value="">All account executives</option>
+          </select>
+          <button onclick="clearAllFilters()" style="font-family:var(--sans);font-size:13px;font-weight:600;padding:5px 12px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--gray-500);cursor:pointer;height:32px;white-space:nowrap;transition:background 0.13s,border-color 0.13s;" title="Clear all column filters, AE selection, and flag filter">✕ Clear filters</button>
+          <button id="flagFilter" onclick="toggleFlagFilter(this)"
+            style="font-family:var(--sans);font-size:13px;font-weight:600;padding:5px 12px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--gray-500);cursor:pointer;height:32px;white-space:nowrap;transition:background 0.13s,border-color 0.13s;">
+            ★ Flagged only
+          </button>
+          <button id="wsViewOnMapBtn" onclick="mapVisible ? closeMap() : openMap()"
+            style="font-family:var(--sans);font-size:13px;font-weight:600;padding:5px 12px;border:1px solid rgba(215,107,91,0.40);border-radius:4px;background:rgba(215,107,91,0.08);color:var(--clay);cursor:pointer;height:32px;white-space:nowrap;transition:background 0.13s,border-color 0.13s;">
+            🗺 Map (<span id="wsMapBtnCount">0</span>)
+          </button>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="font-size:11px;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Show columns:</span>
+            <button class="col-toggle" data-col="GPSVendor"    onclick="toggleCol(this)">GPS Vendor</button>
+            <button class="col-toggle" data-col="FMSystem"     onclick="toggleCol(this)">FM System</button>
+            <button class="col-toggle" data-col="ParentApp"    onclick="toggleCol(this)">Parent App</button>
+            <button class="col-toggle" data-col="TabletVendor" onclick="toggleCol(this)">Tablet Vendor</button>
+          </div>
+          <button class="btn secondary" id="emailBtn" disabled onclick="emailSelected()">✉ Email Selected</button>
+          <button class="btn secondary" id="exportCsvBtn" disabled>Export CSV</button>
+        </div>
+        <div style="display:flex;gap:16px;align-items:center;flex-shrink:0;padding-bottom:8px;font-size:12px;color:var(--gray-500);flex-wrap:wrap;">
+          <span style="font-weight:700;text-transform:uppercase;letter-spacing:0.06em;font-size:11px;">Icon key:</span>
+          <span style="display:flex;align-items:center;gap:5px;">
+            <div class="cell-sold" style="width:18px;height:18px;"><svg viewBox="0 0 13 13" style="width:9px;height:9px;stroke:var(--green);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;"><polyline points="2,7 5.5,10.5 11,3"/></svg></div>
+            Tier 2 – fully owned, no gap
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;">
+            <div class="cell-tier1" style="width:18px;height:18px;"><svg viewBox="0 0 13 13" style="width:9px;height:9px;fill:var(--clay);"><rect x="2" y="5.5" width="9" height="2" rx="1"/></svg></div>
+            Tier 1 – partial ownership, still a gap
+          </span>
+          <span style="display:flex;align-items:center;gap:5px;">
+            <div class="cell-ws" style="width:18px;height:18px;cursor:default;"><svg viewBox="0 0 13 13" style="width:9px;height:9px;stroke:var(--red);fill:none;stroke-width:2;stroke-linecap:round;"><line x1="6.5" y1="1.5" x2="6.5" y2="11.5"/><line x1="1.5" y1="6.5" x2="11.5" y2="6.5"/></svg></div>
+            Gap – not owned
+          </span>
+        </div>
+        <div id="dataTable"></div>
+      </div>
+    </div>
+
+    <!-- Map panel (hidden until user clicks View on Map) -->
+    <div id="wsMapPanel" class="ws-map-panel is-hidden">
+      <div id="wsResizeHandle" title="Drag to resize"></div>
+      <div class="ws-map-header">
+        <span class="ws-count" id="wsMapCount">0 accounts</span>
+        <span class="ws-map-divider"></span>
+        <button id="wsRadiusBtn"    onclick="startRadiusDraw()"  title="Filter by radius from a point">⊙ Radius</button>
+        <button id="wsPolygonBtn"   onclick="startPolygonDraw()" title="Draw a polygon region filter">⬡ Polygon</button>
+        <button id="wsCancelDrawBtn" onclick="cancelDraw()" title="Cancel drawing" style="display:none">✕ Cancel</button>
+        <button id="wsRemoveRegionBtn" onclick="removeGeoRegion()" title="Remove geo-region filter" class="region-active" style="display:none">✕ Region</button>
+        <span class="ws-map-divider"></span>
+        <button id="wsZoomAllBtn"   onclick="zoomToAllPoints()"   title="Zoom to fit all accounts">Fit All</button>
+        <button id="wsMaximizeBtn"  onclick="toggleMapMaximize()" title="Expand map">⛶</button>
+        <button id="wsCloseMapBtn"  onclick="closeMap()" class="btn-close" title="Close map">✕</button>
+      </div>
+      <div id="wsDrawHint" class="ws-draw-hint"></div>
+      <div id="wsRadiusDialog" class="ws-radius-dialog">
+        <span>Radius:</span>
+        <input id="wsRadiusMiles" type="number" value="10" min="1" max="1000" step="1">
+        <span>miles</span>
+        <button class="rd-apply" onclick="confirmRadius()">Apply</button>
+        <button class="rd-cancel" onclick="cancelRadius()">Cancel</button>
+      </div>
+      <div id="wsViewDiv"></div>
+    </div>
+
+    </div><!-- /mainArea -->
+
+  </div>
+
+  <!-- Tutorial backdrop (blocks page interaction) -->
+  <div id="tutorialOverlay"></div>
+
+  <!-- Tutorial spotlight (visual cutout ring) -->
+  <div id="tutorialSpotlight"></div>
+
+  <!-- Tutorial card -->
+  <div id="tutorialCard">
+    <div class="tut-header">
+      <span class="tut-step-label" id="tutStepLabel">Step 1 of 6</span>
+      <a class="tut-skip" href="#" id="tutSkip">Skip tutorial</a>
+    </div>
+    <h2 id="tutTitle"></h2>
+    <p id="tutContent"></p>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-footer" id="tutFooter"></div>
+  </div>
+
+  <!-- Suggestions modal -->
+  <div id="suggestionsModal" onclick="if(event.target===this)closeSuggestions()">
+    <div id="suggestionsPanel">
+      <div class="sugg-header">
+        <span class="sugg-label">💡 Prospecting Idea</span>
+        <button class="sugg-close" onclick="closeSuggestions()" title="Close">✕</button>
+      </div>
+      <p id="suggestionText"></p>
+      <div class="sugg-footer">
+        <button id="newIdeaBtn" onclick="nextSuggestion()">🔄 New Idea</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ════════════════════════════════════════════════════════════════════════
+  //  PORTFOLIO DEMO DATA LAYER
+  //  The production version of this tool loads CRM accounts + open
+  //  opportunities from an internal API. This demo build generates a
+  //  deterministic, fully fictional dataset locally instead — no network
+  //  calls, no authentication, no live systems.
+  // ════════════════════════════════════════════════════════════════════════
+
+  // ── Product catalog ────────────────────────────────────────────────────────
+  // field = Tier 2 (fully owned, no gap). tier1Field/tier1Value = Tier 1 (partial, still a gap).
+  const PRODUCTS = [
+    { label: "Route Planner Pro",  field: "ProductRoutePlannerPro",                  tier1Field: "LegacyPlatform", tier1Value: "Route Planner Classic" },
+    { label: "Onboard Nav",     field: "ProductOnboardNavRidership", tier1Field: "ProductOnboardNav" },
+    { label: "Parent App",    field: "ProductParentAppGeoAlerts",               tier1Field: "ProductParentApp" },
+    { label: "Fleet Tracking",   field: "ProductFleetTracking" },
+    { label: "Fleet Maintenance", field: "ProductFleetMaintenance50",                   tier1Field: "ProductFleetMaintenance" },
+    { label: "Address Lookup",  field: "ProductAddressLookup" },
+    { label: "Reports Portal",    field: "ProductReportsPortal" },
+    { label: "Trip Manager",    field: "ProductTripManager" },
+    { label: "Hardware MDM",  field: "ProductHardwareSotiMDM" },
+  ];
+
+  const KNOWN_PRODUCTS = PRODUCTS.filter(p => !p.tbd);
+
+  // ── Deterministic PRNG so the demo data is stable across page loads ───────
+  function mulberry32(seed) {
+    return function () {
+      let t = (seed += 0x6D2B79F5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // ── Fictional sample dataset ───────────────────────────────────────────────
+  function generateSampleAccounts() {
+    const rand   = mulberry32(20260610);
+    const pick   = arr => arr[Math.floor(rand() * arr.length)];
+    const chance = p => rand() < p;
+    const between = (lo, hi) => lo + rand() * (hi - lo);
+
+    // Regional anchors — plausible US coordinates, several states
+    const REGIONS = [
+      { state: "TX", lat: 30.40, lon: -97.85,  suffixes: ["ISD", "ISD", "Consolidated ISD"] },
+      { state: "NY", lat: 42.85, lon: -76.10,  suffixes: ["Central School District", "City School District"] },
+      { state: "OH", lat: 40.05, lon: -82.95,  suffixes: ["City Schools", "Local Schools"] },
+      { state: "MI", lat: 42.70, lon: -84.50,  suffixes: ["Public Schools", "Community Schools"] },
+      { state: "FL", lat: 28.40, lon: -81.45,  suffixes: ["County Public Schools"] },
+      { state: "PA", lat: 40.75, lon: -77.85,  suffixes: ["Area School District", "School District"] },
+      { state: "IL", lat: 41.60, lon: -88.20,  suffixes: ["CUSD 204", "School District 64", "Community Schools"] },
+      { state: "GA", lat: 33.55, lon: -84.25,  suffixes: ["County Schools"] },
+      { state: "NC", lat: 35.65, lon: -79.05,  suffixes: ["County Schools", "City Schools"] },
+      { state: "CO", lat: 39.55, lon: -104.95, suffixes: ["School District 12", "Public Schools"] },
+      { state: "WA", lat: 47.30, lon: -122.30, suffixes: ["School District"] },
+      { state: "AZ", lat: 33.45, lon: -112.05, suffixes: ["Unified School District"] },
+    ];
+
+    // Fictional place names — none of these are real district names
+    const PLACES = [
+      "Cedar Valley", "Lakeshore", "Maple Ridge", "Granite Falls", "Blue Heron",
+      "Stonebridge", "Prairie View", "Oak Hollow", "Silver Creek", "Harbor Point",
+      "Westwind", "Foxborough Hills", "Eagle Crest", "Juniper Flats", "Riverbend",
+      "Summit Park", "Clearwater Mills", "Birchwood", "Copper Canyon", "Meadowlark",
+      "Pine Bluff", "Sandstone", "Willow Springs", "Northgate", "Bayfield Cove",
+      "Hollis Crossing", "Tremont Heights", "Ashford", "Dunmore", "Kestrel Ridge",
+      "Larkspur", "Mossy Oak", "Quarry Lake", "Redstone", "Saddlebrook",
+      "Thornton Grove", "Vista Verde", "Wagon Wheel", "Yellow Pine", "Zephyr Hills",
+      "Alder Creek", "Brookhaven Falls", "Caldera", "Driftwood", "Elk Meadow",
+      "Fern Hollow", "Goldenrod", "Huckleberry", "Ivy Bend", "Jackrabbit Flats",
+      "Kingfisher", "Limestone Gap", "Marble Falls Junction", "Nettle Creek", "Osprey Landing",
+      "Painted Rock", "Quail Run", "Rolling Fork", "Sycamore Bend", "Timberline",
+      "Umber Hills", "Violet Township", "Whistler Pines", "Yarrow Field",
+    ];
+
+    const AES = [
+      "Maria Delgado", "James Whitfield", "Priya Natarajan",
+      "Tom Okafor", "Rachel Lindqvist", "Derek Boone",
+    ];
+    const BDRS = ["Sam Pruitt", "Alicia Gomez", "Nate Caruso", "Wendy Park"];
+
+    const GPS_VENDORS   = ["Zonar", "Samsara", "Geotab", "CalAmp", "", ""];
+    const FM_SYSTEMS    = ["Fleetio", "Dossier", "RTA Fleet", "", "", ""];
+    const PARENT_APPS   = ["BusBeacon", "RideAlong", "", "", ""];
+    const TABLET_VENDORS = ["Samsung", "Getac", "Lenovo", "", "", ""];
+
+    const accounts = [];
+    PLACES.forEach((place, i) => {
+      const region = REGIONS[i % REGIONS.length];
+      const suffix = pick(region.suffixes);
+      const name   = `${place} ${suffix}`;
+
+      const students = Math.round(between(700, 26000) / 50) * 50;
+      const vehicles = Math.max(8, Math.round(students / between(48, 65)));
+
+      // Product ownership — weighted so the whitespace pattern looks realistic
+      const hasRPPro   = chance(0.45);
+      const legacyPlat  = !hasRPPro && chance(0.55) ? "Route Planner Classic" : "";
+      const navT2 = chance(0.15);
+      const navT1 = !navT2 && chance(0.35);
+      const stopGeoT2   = chance(0.20);
+      const stopT1      = !stopGeoT2 && chance(0.50);
+      const svc50T2     = chance(0.18);
+      const svcT1       = !svc50T2 && chance(0.28);
+
+      const acct = {
+        AccountId:        `demo-${String(i + 1).padStart(3, "0")}`,
+        AccountName:      name,
+        StateOfAddress:   region.state,
+        AccountExecutive: chance(0.93) ? AES[i % AES.length] : "",
+        BDR:              pick(BDRS),
+        NumOfVehicles:    vehicles,
+        NumOfStudentsTransported: students,
+        TotalASF:         Math.round(students * between(7, 26) / 100) * 100,
+        GPSVendor:        pick(GPS_VENDORS),
+        FMSystem:         pick(FM_SYSTEMS),
+        ParentApp:        pick(PARENT_APPS),
+        TabletVendor:     pick(TABLET_VENDORS),
+        LegacyPlatform:   legacyPlat,
+        ProductRoutePlannerPro:                    hasRPPro,
+        ProductOnboardNav:                       navT1,
+        ProductOnboardNavRidership: navT2,
+        ProductParentApp:                         stopT1,
+        ProductParentAppGeoAlerts:                stopGeoT2,
+        ProductFleetTracking:                         chance(0.35),
+        ProductFleetMaintenance50:                    svc50T2,
+        ProductFleetMaintenance:                      svcT1,
+        ProductAddressLookup:                        chance(0.15),
+        ProductReportsPortal:                         chance(0.40),
+        ProductTripManager:                         chance(0.30),
+        ProductHardwareSotiMDM:                    chance(0.20),
+        ApprovalRating:   chance(0.80) ? Math.ceil(between(1, 5.99)) : "",
+        EmailOfPrimaryContact:
+          `transportation@${place.toLowerCase().replace(/[^a-z]+/g, "")}.k12.example.org`,
+        Latitude:  +(region.lat + between(-1.4, 1.4)).toFixed(5),
+        Longitude: +(region.lon + between(-1.6, 1.6)).toFixed(5),
+      };
+      accounts.push(acct);
+    });
+
+    // Fictional open opportunities: roughly a quarter of accounts have 1–2 in flight
+    const oppMap = {};
+    accounts.forEach(a => {
+      if (chance(0.26)) oppMap[a.AccountId] = chance(0.3) ? 2 : 1;
+    });
+
+    return { accounts, oppMap };
+  }
+
+  // ── Product helpers ────────────────────────────────────────────────────────
+  function productTier(acct, product) {
+    if (product.tbd || !product.field) return "gap";
+    if (acct[product.field]) return "tier2";
+    if (product.tier1Field) {
+      const val = acct[product.tier1Field];
+      if (product.tier1Value ? val === product.tier1Value : !!val) return "tier1";
+    }
+    return "gap";
+  }
+
+  function isSold(acct, product) {
+    return productTier(acct, product) === "tier2";
+  }
+
+  function gapCount(acct) {
+    return KNOWN_PRODUCTS.filter(p => productTier(acct, p) !== "tier2").length;
+  }
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let allAccounts  = [];
+  let table        = null;
+  let activeAE     = "";
+  let openOppsMap  = {};   // AccountId → count of open opps
+  let flaggedSet   = new Set(JSON.parse(localStorage.getItem("wm_demo_flagged") || "[]"));
+
+  // ── Data loading (demo: generated locally, no network) ────────────────────
+  async function loadData() {
+    showLoading("Generating sample accounts…");
+
+    // Brief pause so the loading state is visible, mirroring the real tool's UX
+    await new Promise(r => setTimeout(r, 350));
+
+    const { accounts, oppMap } = generateSampleAccounts();
+    allAccounts = accounts;
+    openOppsMap = oppMap;
+
+    hideLoading();
+    buildAESummary();
+    renderTable(allAccounts);
+  }
+
+  // ── Loading helpers ────────────────────────────────────────────────────────
+  function showLoading(msg) {
+    document.getElementById("loadingMsg").textContent = msg || "Loading…";
+    document.getElementById("loadingOverlay").classList.remove("hidden");
+  }
+
+  function hideLoading() {
+    document.getElementById("loadingOverlay").classList.add("hidden");
+  }
+
+  // ── AE Summary strip ───────────────────────────────────────────────────────
+  function buildAESummary() {
+    const aeMap = {};
+    allAccounts.forEach(a => {
+      const ae = (a.AccountExecutive || "").trim() || "Unassigned";
+      if (!aeMap[ae]) aeMap[ae] = {};
+    });
+
+    // Populate AE dropdown — alphabetical by first name
+    const aeDropdown = document.getElementById("aeFilter");
+    while (aeDropdown.options.length > 1) aeDropdown.remove(1);
+    Object.keys(aeMap).sort((a, b) => {
+      const fa = a.trim().split(/\s+/)[0].toLowerCase();
+      const fb = b.trim().split(/\s+/)[0].toLowerCase();
+      return fa < fb ? -1 : fa > fb ? 1 : 0;
+    }).forEach(ae => {
+      const opt = document.createElement("option");
+      opt.value = ae; opt.textContent = ae;
+      aeDropdown.appendChild(opt);
+    });
+  }
+
+  function onAEDropdown(ae) {
+    // Called from the dropdown — sync the AE cards and filter
+    filterByAE(ae, false);
+    document.getElementById("aeFilter").value = ae;
+  }
+
+  function filterByAE(ae, syncDropdown = true) {
+    activeAE = ae;
+    if (syncDropdown) {
+      const dd = document.getElementById("aeFilter");
+      if (dd) dd.value = ae;
+    }
+    let filtered = ae ? allAccounts.filter(a => (a.AccountExecutive || "").trim() === ae || (ae === "Unassigned" && !a.AccountExecutive)) : allAccounts;
+    if (showFlaggedOnly) filtered = filtered.filter(a => flaggedSet.has(a.AccountId));
+    renderTable(filtered);
+  }
+
+  // ── Tabulator ─────────────────────────────────────────────────────────────
+
+  const SVG_CHECK = `<div class="cell-sold"><svg viewBox="0 0 13 13"><polyline points="2,7 5.5,10.5 11,3"/></svg></div>`;
+  const SVG_PLUS  = `<div class="cell-ws"><svg viewBox="0 0 13 13"><line x1="6.5" y1="1.5" x2="6.5" y2="11.5"/><line x1="1.5" y1="6.5" x2="11.5" y2="6.5"/></svg></div>`;
+  const SVG_TBD   = `<div class="cell-tbd">TBD</div>`;
+  const SVG_TIER1 = `<div class="cell-tier1"><svg viewBox="0 0 13 13" style="width:12px;height:12px;fill:var(--ws-amber);"><rect x="2" y="5.5" width="9" height="2" rx="1"/></svg></div>`;
+
+  function textHeaderFilter() {
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = "filter…";
+    inp.style.width = "100%";
+    inp.style.boxSizing = "border-box";
+    return inp;
+  }
+
+  function containsFilter(headerValue, rowValue) {
+    if (!headerValue) return true;
+    return String(rowValue ?? "").toLowerCase().includes(String(headerValue).toLowerCase());
+  }
+
+  function numFilter(headerValue, rowValue) {
+    if (!headerValue) return true;
+    const h = String(headerValue).trim();
+    const v = Number(rowValue) || 0;
+    if (h.startsWith(">=")) return v >= Number(h.slice(2));
+    if (h.startsWith("<=")) return v <= Number(h.slice(2));
+    if (h.startsWith(">"))  return v > Number(h.slice(1));
+    if (h.startsWith("<"))  return v < Number(h.slice(1));
+    return v === Number(h);
+  }
+
+  // ── Custom header filters ─────────────────────────────────────────────────
+
+  function approvalMultiFilter(cell, onRendered, success) {
+    const values = [...new Set(
+      allAccounts.map(a => a.ApprovalRating).filter(v => v != null && v !== "")
+    )].sort();
+
+    const selected = new Set();
+    const container = document.createElement("div");
+    container.style.cssText = "position:relative;";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "width:100%;font-size:11px;padding:2px 6px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;cursor:pointer;text-align:left;height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+    btn.textContent = "All";
+
+    // Portal to body so tabulator's overflow:hidden can't clip it
+    const panel = document.createElement("div");
+    panel.style.cssText = "display:none;position:fixed;z-index:99999;background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,0.12);";
+    document.body.appendChild(panel);
+
+    values.forEach(v => {
+      const label = document.createElement("label");
+      label.style.cssText = "display:flex;align-items:center;gap:6px;padding:3px 4px;cursor:pointer;font-size:11px;white-space:nowrap;border-radius:4px;";
+      label.addEventListener("mouseover", () => label.style.background = "var(--smoke)");
+      label.addEventListener("mouseout",  () => label.style.background = "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = String(v);
+      cb.addEventListener("change", () => {
+        cb.checked ? selected.add(cb.value) : selected.delete(cb.value);
+        btn.textContent = selected.size === 0 ? "All" : [...selected].join(", ");
+        success(selected.size === 0 ? "" : [...selected]);
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(String(v)));
+      panel.appendChild(label);
+    });
+
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+      const rect = btn.getBoundingClientRect();
+      panel.style.top  = (rect.bottom + 4) + "px";
+      panel.style.left = rect.left + "px";
+      panel.style.display = "block";
+    });
+
+    document.addEventListener("click", e => {
+      if (!container.contains(e.target) && !panel.contains(e.target)) panel.style.display = "none";
+    });
+
+    container.appendChild(btn);
+    return container;
+  }
+
+  function approvalMultiFilterFunc(headerValue, rowValue) {
+    if (!headerValue || !Array.isArray(headerValue) || headerValue.length === 0) return true;
+    return headerValue.includes(String(rowValue ?? ""));
+  }
+
+  function gapMultiFilter(cell, onRendered, success) {
+    const values = [...new Set(allAccounts.map(a => gapCount(a)))].sort((a, b) => a - b);
+
+    const selected = new Set();
+    const container = document.createElement("div");
+    container.style.cssText = "position:relative;";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "width:100%;font-size:11px;padding:2px 6px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;cursor:pointer;text-align:left;height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+    btn.textContent = "All";
+
+    const panel = document.createElement("div");
+    panel.style.cssText = "display:none;position:fixed;z-index:99999;background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:100px;box-shadow:0 4px 16px rgba(0,0,0,0.12);";
+    document.body.appendChild(panel);
+
+    values.forEach(v => {
+      const label = document.createElement("label");
+      label.style.cssText = "display:flex;align-items:center;gap:6px;padding:3px 4px;cursor:pointer;font-size:11px;white-space:nowrap;border-radius:4px;";
+      label.addEventListener("mouseover", () => label.style.background = "var(--smoke)");
+      label.addEventListener("mouseout",  () => label.style.background = "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = String(v);
+      cb.addEventListener("change", () => {
+        cb.checked ? selected.add(v) : selected.delete(v);
+        btn.textContent = selected.size === 0 ? "All" : [...selected].sort((a,b)=>a-b).join(", ");
+        success(selected.size === 0 ? [] : [...selected]);
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(v === 0 ? "0 — fully covered" : String(v)));
+      panel.appendChild(label);
+    });
+
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+      const rect = btn.getBoundingClientRect();
+      panel.style.top  = (rect.bottom + 4) + "px";
+      panel.style.left = rect.left + "px";
+      panel.style.display = "block";
+    });
+
+    document.addEventListener("click", e => {
+      if (!container.contains(e.target) && !panel.contains(e.target)) panel.style.display = "none";
+    });
+
+    container.appendChild(btn);
+    return container;
+  }
+
+  function gapMultiFilterFunc(headerValue, rowValue) {
+    if (!headerValue || !Array.isArray(headerValue) || headerValue.length === 0) return true;
+    return headerValue.includes(Number(rowValue));
+  }
+
+  function stateMultiFilter(cell, onRendered, success) {
+    const values = [...new Set(
+      allAccounts.map(a => a.StateOfAddress).filter(v => v != null && v !== "")
+    )].sort();
+
+    const selected = new Set();
+    const container = document.createElement("div");
+    container.style.cssText = "position:relative;";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.style.cssText = "width:100%;font-size:11px;padding:2px 6px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;cursor:pointer;text-align:left;height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+    btn.textContent = "All";
+
+    const panel = document.createElement("div");
+    panel.style.cssText = "display:none;position:fixed;z-index:99999;background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:120px;max-height:260px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,0.12);";
+    document.body.appendChild(panel);
+
+    values.forEach(v => {
+      const label = document.createElement("label");
+      label.style.cssText = "display:flex;align-items:center;gap:6px;padding:3px 4px;cursor:pointer;font-size:11px;white-space:nowrap;border-radius:4px;";
+      label.addEventListener("mouseover", () => label.style.background = "var(--smoke)");
+      label.addEventListener("mouseout",  () => label.style.background = "");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = String(v);
+      cb.addEventListener("change", () => {
+        cb.checked ? selected.add(cb.value) : selected.delete(cb.value);
+        btn.textContent = selected.size === 0 ? "All" : [...selected].join(", ");
+        success(selected.size === 0 ? [] : [...selected]);
+      });
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(String(v)));
+      panel.appendChild(label);
+    });
+
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+      const rect = btn.getBoundingClientRect();
+      panel.style.top  = (rect.bottom + 4) + "px";
+      panel.style.left = rect.left + "px";
+      panel.style.display = "block";
+    });
+
+    document.addEventListener("click", e => {
+      if (!container.contains(e.target) && !panel.contains(e.target)) panel.style.display = "none";
+    });
+
+    container.appendChild(btn);
+    return container;
+  }
+
+  function stateMultiFilterFunc(headerValue, rowValue) {
+    if (!headerValue || !Array.isArray(headerValue) || headerValue.length === 0) return true;
+    return headerValue.includes(String(rowValue ?? ""));
+  }
+
+  // Vendor columns: text contains + Empty / Not-Empty toggles
+  function vendorHeaderFilter(cell, onRendered, success) {
+    const field = cell.getColumn().getField();
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;flex-direction:column;gap:2px;";
+
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = "filter…";
+    inp.style.cssText = "width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;box-sizing:border-box;";
+
+    const btnRow = document.createElement("div");
+    btnRow.style.cssText = "display:flex;gap:2px;";
+
+    const mkBtn = label => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = label;
+      b.style.cssText = "flex:1;font-size:10px;padding:1px 3px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--muted);cursor:pointer;transition:all 0.1s;white-space:nowrap;";
+      return b;
+    };
+    const emptyBtn    = mkBtn("∅ Empty");
+    const notEmptyBtn = mkBtn("≠ Empty");
+
+    let emptyState = null; // null | "empty" | "notEmpty"
+
+    const filterFn = data => {
+      const v = String(data[field] ?? "").trim();
+      if (emptyState === "empty")    return v === "";
+      if (emptyState === "notEmpty") return v !== "";
+      const text = inp.value.trim();
+      if (!text) return true;
+      return v.toLowerCase().includes(text.toLowerCase());
+    };
+
+    let active = false;
+    const apply = () => {
+      if (!table) return;
+      const hasFilter = emptyState !== null || inp.value.trim() !== "";
+      if (active) { table.removeFilter(filterFn); active = false; }
+      if (hasFilter) { table.addFilter(filterFn); active = true; }
+    };
+
+    inp.addEventListener("input", apply);
+
+    const setEmpty = state => {
+      if (emptyState === state) {
+        emptyState = null;
+        [emptyBtn, notEmptyBtn].forEach(b => { b.style.background = ""; b.style.color = ""; b.style.borderColor = ""; });
+      } else {
+        emptyState = state;
+        emptyBtn.style.background    = state === "empty"    ? "#D76B5B" : "";
+        emptyBtn.style.color         = state === "empty"    ? "#fff"    : "";
+        emptyBtn.style.borderColor   = state === "empty"    ? "#B85848" : "";
+        notEmptyBtn.style.background = state === "notEmpty" ? "#D76B5B" : "";
+        notEmptyBtn.style.color      = state === "notEmpty" ? "#fff"    : "";
+        notEmptyBtn.style.borderColor= state === "notEmpty" ? "#B85848" : "";
+      }
+      apply();
+    };
+
+    emptyBtn.addEventListener("click",    () => setEmpty("empty"));
+    notEmptyBtn.addEventListener("click", () => setEmpty("notEmpty"));
+
+    btnRow.appendChild(emptyBtn);
+    btnRow.appendChild(notEmptyBtn);
+    wrapper.appendChild(inp);
+    wrapper.appendChild(btnRow);
+    return wrapper;
+  }
+
+  // Range filter: bypasses headerFilterFunc and drives table.addFilter/removeFilter directly
+  function rangeHeaderFilter(cell, onRendered, success) {
+    const field = cell.getColumn().getField();
+    const wrapper = document.createElement("div");
+    wrapper.style.cssText = "display:flex;gap:3px;";
+
+    const mkInp = placeholder => {
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.placeholder = placeholder;
+      inp.style.cssText = "width:50%;font-size:11px;padding:2px 4px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;min-width:0;";
+      return inp;
+    };
+    const minInp = mkInp("Min");
+    const maxInp = mkInp("Max");
+
+    // Closure captures the inputs so it always reads current values
+    const filterFn = data => {
+      const v   = Number(data[field]) || 0;
+      const min = minInp.value !== "" ? Number(minInp.value) : null;
+      const max = maxInp.value !== "" ? Number(maxInp.value) : null;
+      if (min !== null && v < min) return false;
+      if (max !== null && v > max) return false;
+      return true;
+    };
+
+    let active = false;
+    const fire = () => {
+      if (!table) return;
+      const hasFilter = minInp.value !== "" || maxInp.value !== "";
+      if (active) { table.removeFilter(filterFn); active = false; }
+      if (hasFilter) { table.addFilter(filterFn); active = true; }
+    };
+
+    minInp.addEventListener("input", fire);
+    maxInp.addEventListener("input", fire);
+    wrapper.appendChild(minInp);
+    wrapper.appendChild(maxInp);
+    return wrapper;
+  }
+
+  function buildColumns() {
+    const baseText = (title, field, opts = {}) => ({
+      title,
+      field,
+      minWidth: opts.minWidth || 120,
+      headerFilter: textHeaderFilter,
+      headerFilterFunc: containsFilter,
+      headerFilterLiveFilter: true,
+      ...opts,
+    });
+
+    function productFilterFunc(hv, rv) {
+      if (!hv || (Array.isArray(hv) && hv.length === 0)) return true;
+      if (Array.isArray(hv)) return hv.includes(rv);
+      return rv === hv;
+    }
+
+    // Checkbox multi-select dropdown for tier-1 products
+    function productMultiFilterEditor(options) {
+      return (cell, onRendered, success) => {
+        const selected = new Set();
+        const container = document.createElement("div");
+        container.style.cssText = "position:relative;";
+
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.style.cssText = "width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--silver);border-radius:4px;background:var(--white);color:var(--text);outline:none;cursor:pointer;text-align:left;height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;";
+        btn.textContent = "All";
+
+        const panel = document.createElement("div");
+        panel.style.cssText = "display:none;position:fixed;z-index:99999;background:var(--panel-bg);border:1px solid var(--border);border-radius:8px;padding:6px;min-width:110px;box-shadow:0 4px 16px rgba(0,0,0,0.12);";
+        document.body.appendChild(panel);
+
+        options.forEach(([val, label]) => {
+          const lbl = document.createElement("label");
+          lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:3px 4px;cursor:pointer;font-size:11px;white-space:nowrap;border-radius:4px;";
+          lbl.addEventListener("mouseover", () => lbl.style.background = "var(--smoke)");
+          lbl.addEventListener("mouseout",  () => lbl.style.background = "");
+          const cb = document.createElement("input");
+          cb.type = "checkbox"; cb.value = val;
+          cb.addEventListener("change", () => {
+            cb.checked ? selected.add(val) : selected.delete(val);
+            btn.textContent = selected.size === 0 ? "All"
+              : [...selected].map(v => options.find(o => o[0] === v)?.[1] ?? v).join(", ");
+            success(selected.size === 0 ? [] : [...selected]);
+          });
+          lbl.appendChild(cb);
+          lbl.appendChild(document.createTextNode(label));
+          panel.appendChild(lbl);
+        });
+
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          if (panel.style.display !== "none") { panel.style.display = "none"; return; }
+          const rect = btn.getBoundingClientRect();
+          panel.style.top  = (rect.bottom + 4) + "px";
+          panel.style.left = rect.left + "px";
+          panel.style.display = "block";
+        });
+
+        document.addEventListener("click", e => {
+          if (!container.contains(e.target) && !panel.contains(e.target)) panel.style.display = "none";
+        });
+
+        container.appendChild(btn);
+        return container;
+      };
+    }
+
+    const productCol = (product) => {
+      const hasTier = !!product.tier1Field;
+      const tierOpts = [["gap", "Gap ◻"], ["tier1", "Tier 1 ◑"], ["sold", "Sold ✓"]];
+      const noTierOpts = [["gap", "Gap ◻"], ["sold", "Sold ✓"]];
+      return {
+        title: product.label,
+        field: product.label,
+        width: 90,
+        hozAlign: "center",
+        headerHozAlign: "center",
+        headerSort: true,
+        headerFilter: hasTier
+          ? productMultiFilterEditor(tierOpts)
+          : (cell, onRendered, success) => {
+              const sel = document.createElement("select");
+              sel.style.cssText = "width:100%;font-size:11px;padding:2px 4px;border:1px solid var(--silver);border-radius:4px;background:var(--white);outline:none;cursor:pointer;";
+              [["", "All"], ...noTierOpts].forEach(([val, label]) => {
+                const opt = document.createElement("option");
+                opt.value = val; opt.textContent = label;
+                sel.appendChild(opt);
+              });
+              sel.addEventListener("change", () => success(sel.value));
+              onRendered(() => sel.focus());
+              return sel;
+            },
+        headerFilterFunc: productFilterFunc,
+        headerFilterLiveFilter: true,
+        mutator: (value, data) => {
+          if (product.tbd) return "tbd";
+          const tier = productTier(data, product);
+          if (tier === "tier2") return "sold";
+          if (tier === "tier1") return "tier1";
+          return "gap";
+        },
+        formatter: (cell) => {
+          const v = cell.getValue();
+          if (v === "tbd")   return SVG_TBD;
+          if (v === "sold")  return SVG_CHECK;
+          if (v === "tier1") return SVG_TIER1;
+          return `<div class="cell-ws">${'<svg viewBox="0 0 13 13" style="width:12px;height:12px;stroke:var(--ws-gap);fill:none;stroke-width:2;stroke-linecap:round"><line x1="6.5" y1="1.5" x2="6.5" y2="11.5"/><line x1="1.5" y1="6.5" x2="11.5" y2="6.5"/></svg>'}</div>`;
+        },
+      };
+    };
+
+    // Optional columns — toggled on/off by the user
+    const OPTIONAL_COLS = {
+      GPSVendor:    { title: "GPS Vendor",    field: "GPSVendor",    minWidth: 130, headerFilter: vendorHeaderFilter },
+      FMSystem:     { title: "FM System",     field: "FMSystem",     minWidth: 120, headerFilter: vendorHeaderFilter },
+      ParentApp:    { title: "Parent App",    field: "ParentApp",    minWidth: 120, headerFilter: vendorHeaderFilter },
+      TabletVendor: { title: "Tablet Vendor", field: "TabletVendor", minWidth: 120, headerFilter: vendorHeaderFilter },
+    };
+
+    const optionalActive = document.querySelectorAll(".col-toggle.on");
+    const activeCols = [...optionalActive].map(b => OPTIONAL_COLS[b.dataset.col]).filter(Boolean);
+
+    return [
+      { formatter: "rowSelection", titleFormatter: "rowSelection", width: 40, hozAlign: "center", headerHozAlign: "center", headerSort: false, frozen: true, cellClick: (e, cell) => cell.getRow().toggleSelect() },
+      { title: "#", formatter: "rownum", width: 50, headerSort: false },
+
+      {
+        title: "Account",
+        field: "AccountName",
+        minWidth: 240,
+        frozen: true,
+        headerFilter: textHeaderFilter,
+        headerFilterFunc: containsFilter,
+        headerFilterLiveFilter: true,
+        formatter: c => {
+          const r    = c.getRow().getData();
+          const state   = r.StateOfAddress ? `, ${esc(r.StateOfAddress)}` : "";
+          const ae      = r.AccountExecutive ? `<span style="display:block;font-size:0.75em;color:var(--muted);margin-top:1px;">${esc(r.AccountExecutive)}</span>` : "";
+          const starred = flaggedSet.has(r.AccountId);
+          const starBtn = `<span onclick="event.stopPropagation();toggleFlag('${esc(r.AccountId)}',this)"
+            title="${starred ? "Unflag" : "Flag this account"}"
+            style="cursor:pointer;margin-left:6px;font-size:0.85em;color:${starred ? "#D76B5B" : "var(--muted)"};">★</span>`;
+          const openOpp = openOppsMap[r.AccountId]
+            ? `<span style="margin-left:6px;font-size:0.7em;font-weight:700;padding:1px 6px;border-radius:999px;background:#dbeafe;color:#1e40af;vertical-align:middle;">${openOppsMap[r.AccountId]} opp${openOppsMap[r.AccountId] > 1 ? "s" : ""} open</span>`
+            : "";
+          // Demo build: the production tool deep-links the account name into the CRM record here
+          const nameEl = `<span style="font-weight:600;">${esc(r.AccountName)}</span>`;
+          return `<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">
+            ${nameEl}<span style="color:var(--muted);font-size:0.85em;">${state}</span>${starBtn}${openOpp}
+          </div>${ae}`;
+        },
+      },
+
+      {
+        title: "State",
+        field: "StateOfAddress",
+        width: 80,
+        sorter: "string",
+        headerFilter: stateMultiFilter,
+        headerFilterFunc: stateMultiFilterFunc,
+        headerFilterLiveFilter: true,
+      },
+
+      {
+        title: "Gaps",
+        field: "gapCount",
+        width: 65,
+        hozAlign: "center",
+        headerHozAlign: "center",
+        sorter: "number",
+        headerFilter: gapMultiFilter,
+        headerFilterFunc: gapMultiFilterFunc,
+        headerFilterLiveFilter: true,
+        formatter: c => {
+          const v = c.getValue();
+          const color = v > 0 ? "var(--ws-amber)" : "var(--sold-green)";
+          return `<span style="font-weight:800;color:${color}">${v}</span>`;
+        },
+        mutator: (value, data) => gapCount(data),
+      },
+
+      ...PRODUCTS.map(productCol),
+
+      {
+        title: "Approval Rating",
+        field: "ApprovalRating",
+        width: 110,
+        hozAlign: "center",
+        headerHozAlign: "center",
+        sorter: "number",
+        headerFilter: approvalMultiFilter,
+        headerFilterFunc: approvalMultiFilterFunc,
+        headerFilterLiveFilter: true,
+        formatter: c => c.getValue() ?? "",
+      },
+
+      {
+        title: "Students",
+        field: "NumOfStudentsTransported",
+        minWidth: 130,
+        hozAlign: "right",
+        headerHozAlign: "right",
+        headerFilter: rangeHeaderFilter,
+        formatter: c => c.getValue() ? Number(c.getValue()).toLocaleString() : "",
+        sorter: "number",
+      },
+
+      {
+        title: "Total ASF",
+        field: "TotalASF",
+        minWidth: 130,
+        hozAlign: "right",
+        headerHozAlign: "right",
+        headerFilter: rangeHeaderFilter,
+        formatter: c => c.getValue() ? "$" + Math.round(Number(c.getValue()) / 1000) + "k" : "",
+        sorter: "number",
+      },
+
+      ...activeCols,
+    ];
+  }
+
+  // ── Flag/star system ────────────────────────────────────────────────────────
+  let showFlaggedOnly = false;
+
+  function clearAllFilters() {
+    // Clear Tabulator column header filters
+    if (table) table.clearHeaderFilter();
+
+    // Reset AE dropdown
+    const aeDD = document.getElementById("aeFilter");
+    if (aeDD) aeDD.value = "";
+    activeAE = "";
+
+    // Reset flag filter
+    showFlaggedOnly = false;
+    const flagBtn = document.getElementById("flagFilter");
+    if (flagBtn) {
+      flagBtn.style.background  = "";
+      flagBtn.style.color       = "";
+      flagBtn.style.borderColor = "";
+    }
+
+    // Clear geo-region
+    cancelDraw();
+    removeGeoRegion();
+
+    // Re-render with all accounts
+    renderTable(allAccounts);
+  }
+
+  function toggleFlagFilter(btn) {
+    showFlaggedOnly = !showFlaggedOnly;
+    btn.style.background  = showFlaggedOnly ? "#D76B5B" : "";
+    btn.style.color       = showFlaggedOnly ? "#fff"    : "";
+    btn.style.borderColor = showFlaggedOnly ? "#B85848" : "";
+    const ae = document.getElementById("aeFilter").value;
+    let data = ae
+      ? allAccounts.filter(a => (a.AccountExecutive || "").trim() === ae || (ae === "Unassigned" && !a.AccountExecutive))
+      : allAccounts;
+    if (showFlaggedOnly) data = data.filter(a => flaggedSet.has(a.AccountId));
+    renderTable(data);
+  }
+
+  function toggleFlag(accountId, btn) {
+    if (flaggedSet.has(accountId)) {
+      flaggedSet.delete(accountId);
+      btn.style.color = "var(--muted)";
+      btn.title = "Flag this account";
+    } else {
+      flaggedSet.add(accountId);
+      btn.style.color = "#D76B5B";
+      btn.title = "Unflag this account";
+    }
+    localStorage.setItem("wm_demo_flagged", JSON.stringify([...flaggedSet]));
+    updateCount();
+  }
+
+  function toggleCol(btn) {
+    btn.classList.toggle("on");
+    // Re-render table with current data to pick up new column set
+    const ae = document.getElementById("aeFilter") ? document.getElementById("aeFilter").value : "";
+    let data = ae
+      ? allAccounts.filter(a => (a.AccountExecutive || "").trim() === ae || (ae === "Unassigned" && !a.AccountExecutive))
+      : allAccounts;
+    if (showFlaggedOnly) data = data.filter(a => flaggedSet.has(a.AccountId));
+    renderTable(data);
+  }
+
+  function renderTable(data) {
+    if (table) { table.destroy(); table = null; }
+
+    table = new Tabulator("#dataTable", {
+      data,
+      layout: "fitDataFill",
+      height: "100%",
+      index: "AccountId",
+      columns: buildColumns(),
+      initialSort: [{ column: "NumOfStudentsTransported", dir: "desc" }],
+    });
+
+    table.on("tableBuilt", () => {
+      if (geoRegionGeometry) table.addFilter(geoRegionFilterFn);
+      updateCount();
+    });
+    table.on("dataFiltered",        updateCount);
+    table.on("dataLoaded",          updateCount);
+    table.on("renderComplete",      updateCount);
+    table.on("rowSelectionChanged", updateEmailBtn);
+
+    document.getElementById("exportCsvBtn").disabled = false;
+  }
+
+  function updateCount() {
+    if (!table) return;
+    try {
+      const rows = table.getRows("active") || [];
+      const n = rows.length;
+      document.getElementById("oppCount").innerHTML =
+        `<span class="muted">(</span>${n}<span class="muted r">)</span>`;
+      const mapBtnCount = document.getElementById("wsMapBtnCount");
+      if (mapBtnCount) mapBtnCount.textContent = n;
+      updateStats(rows.map(r => r.getData()));
+      syncMapFromGrid();
+    } catch { /* ignore */ }
+  }
+
+  function updateStats(visibleData) {
+    if (!visibleData || visibleData.length === 0) {
+      document.getElementById("statsStrip").innerHTML = "";
+      return;
+    }
+    const n          = visibleData.length;
+    const totalGaps  = visibleData.reduce((s, a) => s + gapCount(a), 0);
+    const totalSlots = n * KNOWN_PRODUCTS.length;
+    const covered    = totalSlots - totalGaps;
+    const covPct     = totalSlots > 0 ? Math.round((covered / totalSlots) * 100) : 0;
+    const avgGaps    = (totalGaps / n).toFixed(1);
+    const withOpps   = visibleData.filter(a => openOppsMap[a.AccountId]).length;
+    const flagged    = visibleData.filter(a => flaggedSet.has(a.AccountId)).length;
+
+    const withStudents = visibleData.filter(a => Number(a.NumOfStudentsTransported) > 0);
+    const avgStudents  = withStudents.length
+      ? Math.round(withStudents.reduce((s, a) => s + Number(a.NumOfStudentsTransported), 0) / withStudents.length)
+      : null;
+
+    const withASF  = visibleData.filter(a => Number(a.TotalASF) > 0);
+    const avgASF   = withASF.length
+      ? Math.round(withASF.reduce((s, a) => s + Number(a.TotalASF), 0) / withASF.length)
+      : null;
+
+    document.getElementById("statsStrip").innerHTML = `
+      <div class="stat-chip"><strong>${n}</strong> accounts</div>
+      <div class="stat-chip"><strong class="amber">${avgGaps}</strong> avg gaps / account</div>
+      <div class="stat-chip"><strong class="green">${covPct}%</strong> product coverage</div>
+      <div class="stat-chip"><strong>${totalGaps}</strong> total whitespace slots</div>
+      <div class="stat-chip"><strong class="green">${withOpps}</strong> with open opps in flight</div>
+      ${avgStudents !== null ? `<div class="stat-chip"><strong>${avgStudents.toLocaleString()}</strong> avg students</div>` : ""}
+      ${avgASF      !== null ? `<div class="stat-chip"><strong>$${Math.round(avgASF / 1000)}k</strong> avg ASF</div>` : ""}
+      ${flagged > 0 ? `<div class="stat-chip"><strong class="amber">${flagged}</strong> flagged ★</div>` : ""}
+    `;
+  }
+
+  // ── Email selected ────────────────────────────────────────────────────────
+  function updateEmailBtn() {
+    const btn = document.getElementById("emailBtn");
+    if (!btn) return;
+    const count = table ? table.getSelectedRows().length : 0;
+    btn.disabled = count === 0;
+    btn.textContent = count > 0 ? `✉ Email Selected (${count})` : "✉ Email Selected";
+  }
+
+  function emailSelected() {
+    if (!table) return;
+    const activeIds = new Set(table.getRows("active").map(r => r.getData().AccountId));
+    const emails = table.getSelectedRows()
+      .filter(r => activeIds.has(r.getData().AccountId))
+      .map(r => r.getData().EmailOfPrimaryContact)
+      .filter(Boolean);
+    if (!emails.length) return;
+    const subject = encodeURIComponent("Following Up");
+    const link = emails.length === 1
+      ? `mailto:${encodeURIComponent(emails[0])}?subject=${subject}`
+      : `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${subject}`;
+    window.location.href = link;
+  }
+
+  // ── CSV export ─────────────────────────────────────────────────────────────
+  document.getElementById("exportCsvBtn").addEventListener("click", () => {
+    if (table) table.download("csv", `whitespace_map_demo_${new Date().toISOString().slice(0,10)}.csv`);
+  });
+
+  // ── Map panel ─────────────────────────────────────────────────────────────
+
+  // ArcGIS module references (populated after lazy load)
+  let _WsGraphic = null, _WsPoint = null, _WsPolygon = null;
+  let _WsExtent = null, _WsGeomEngine = null, _WsWMUtils = null;
+  let _WsDraw = null;
+
+  // Map state
+  let mapReady      = false;
+  let mapVisible    = false;
+  let wsView        = null;
+  let wsLayer       = null;
+  let regionLayer   = null;
+  let previewLayer  = null;
+  let wsGraphicsById = {};   // AccountId → Graphic
+
+  // Geo-region state
+  let geoRegionGeometry   = null;  // active ArcGIS geometry used for filtering
+  let activeDrawAction    = null;  // current Draw action
+  let drawingMode         = null;  // "radius" | "polygon" | null
+  let pendingRadiusPoint  = null;  // Point stored while awaiting radius dialog
+
+  const POINT_SYMBOL = {
+    type: "simple-marker",
+    style: "circle",
+    size: 14,
+    color: "#D76B5B",
+    outline: { color: "white", width: 1.5 },
+  };
+
+  const REGION_FILL = {
+    type: "simple-fill",
+    color: [37, 99, 235, 0.1],
+    outline: { color: [37, 99, 235, 0.85], width: 2, style: "dash" },
+  };
+
+  const PREVIEW_FILL = {
+    type: "simple-fill",
+    color: [37, 99, 235, 0.06],
+    outline: { color: [37, 99, 235, 0.5], width: 1.5, style: "dash" },
+  };
+
+  // ── Stable filter function (reference must not change for removeFilter) ──
+  function geoRegionFilterFn(data) {
+    if (!geoRegionGeometry || !_WsGeomEngine || !_WsWMUtils || !_WsPoint) return true;
+    const lat = parseFloat(data.Latitude);
+    const lon = parseFloat(data.Longitude);
+    if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0)) return false;
+    const pt = _WsWMUtils.geographicToWebMercator(
+      new _WsPoint({ longitude: lon, latitude: lat, spatialReference: { wkid: 4326 } })
+    );
+    return _WsGeomEngine.contains(geoRegionGeometry, pt);
+  }
+
+  // ── ArcGIS loader ─────────────────────────────────────────────────────────
+  function loadArcGISScript() {
+    return new Promise((resolve, reject) => {
+      if (window.__arcgisScriptLoaded) { resolve(); return; }
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "https://js.arcgis.com/4.30/esri/themes/light/main.css";
+      document.head.appendChild(link);
+      const script = document.createElement("script");
+      script.src = "https://js.arcgis.com/4.30/";
+      script.onload = () => { window.__arcgisScriptLoaded = true; resolve(); };
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  function initArcGISMap() {
+    return new Promise(resolve => {
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/layers/GraphicsLayer",
+        "esri/Graphic",
+        "esri/geometry/Point",
+        "esri/geometry/Polygon",
+        "esri/geometry/Extent",
+        "esri/geometry/geometryEngine",
+        "esri/geometry/support/webMercatorUtils",
+        "esri/views/draw/Draw",
+        "esri/widgets/Home",
+      ], (EsriMap, MapView, GraphicsLayer, Graphic, Point, Polygon,
+          Extent, GeomEngine, WMUtils, Draw, Home) => {
+
+        // Store module refs for use outside require
+        _WsGraphic    = Graphic;
+        _WsPoint      = Point;
+        _WsPolygon    = Polygon;
+        _WsExtent     = Extent;
+        _WsGeomEngine = GeomEngine;
+        _WsWMUtils    = WMUtils;
+
+        // Build account graphics cache
+        const acctPopupTemplate = {
+          title: "{AccountName}",
+          content: [{
+            type: "fields",
+            fieldInfos: [
+              { fieldName: "StateOfAddress",          label: "State"               },
+              { fieldName: "AccountExecutive",         label: "AE"                  },
+              { fieldName: "NumOfStudentsTransported", label: "Students Transported" },
+              { fieldName: "ApprovalRating",           label: "Approval Rating"      },
+            ],
+          }],
+        };
+
+        allAccounts.forEach(acct => {
+          const lat = parseFloat(acct.Latitude);
+          const lon = parseFloat(acct.Longitude);
+          if (!isFinite(lat) || !isFinite(lon) || (lat === 0 && lon === 0)
+              || lat < -90 || lat > 90 || lon < -180 || lon > 180) return;
+          wsGraphicsById[acct.AccountId] = new Graphic({
+            geometry: new Point({ longitude: lon, latitude: lat }),
+            symbol: POINT_SYMBOL,
+            popupTemplate: acctPopupTemplate,
+            attributes: {
+              AccountId:               acct.AccountId,
+              AccountName:             acct.AccountName                || "",
+              StateOfAddress:          acct.StateOfAddress             || "",
+              AccountExecutive:        acct.AccountExecutive           || "",
+              NumOfStudentsTransported: acct.NumOfStudentsTransported  ?? "",
+              ApprovalRating:          acct.ApprovalRating             ?? "",
+            },
+          });
+        });
+
+        // Layers: points → region → preview (draw order bottom to top)
+        wsLayer      = new GraphicsLayer();
+        regionLayer  = new GraphicsLayer();
+        previewLayer = new GraphicsLayer();
+
+        const map = new EsriMap({
+          basemap: "streets-navigation-vector",
+          layers: [wsLayer, regionLayer, previewLayer],
+        });
+
+        wsView = new MapView({
+          container: "wsViewDiv",
+          map,
+          center: [-98.5, 39.5],
+          zoom: 4,
+        });
+        wsView.popup.autoOpenEnabled = false;
+        wsView.ui.add(new Home({ view: wsView }), "top-left");
+
+        _WsDraw = new Draw({ view: wsView });
+
+        // Point-click → popup (only when not in draw mode)
+        wsView.on("click", async event => {
+          if (drawingMode) return;
+          const hit = await wsView.hitTest(event, { include: wsLayer });
+          const result = hit.results[0];
+          if (!result) { wsView.popup.close(); return; }
+          wsView.popup.open({
+            features:  [result.graphic],
+            location:  result.graphic.geometry,
+          });
+        });
+
+        wsView.when(resolve);
+      });
+    });
+  }
+
+  // ── Open / close / maximize ───────────────────────────────────────────────
+  async function openMap() {
+    const panel = document.getElementById("wsMapPanel");
+    if (!mapVisible) {
+      panel.classList.remove("is-hidden");
+      mapVisible = true;
+    }
+    if (mapReady) {
+      if (wsView) wsView.resize();
+      syncMapFromGrid();
+      return;
+    }
+    document.getElementById("wsMapCount").textContent = "Loading map…";
+    try {
+      await loadArcGISScript();
+      await initArcGISMap();
+      mapReady = true;
+      syncMapFromGrid();
+      zoomToAllPoints();
+    } catch (e) {
+      document.getElementById("wsMapCount").textContent = "Map failed to load.";
+      console.error("Map init error:", e);
+    }
+  }
+
+  function closeMap() {
+    cancelDraw();
+    // Reset maximize state
+    document.getElementById("mainArea").classList.remove("map-maximized");
+    document.getElementById("wsMaximizeBtn").textContent = "⛶";
+    document.getElementById("wsMapPanel").classList.add("is-hidden");
+    mapVisible = false;
+  }
+
+  function toggleMapMaximize() {
+    const mainArea = document.getElementById("mainArea");
+    const btn = document.getElementById("wsMaximizeBtn");
+    const isMax = mainArea.classList.toggle("map-maximized");
+    btn.textContent = isMax ? "⊡" : "⛶";
+    btn.title = isMax ? "Restore split view" : "Expand map";
+    if (wsView) setTimeout(() => wsView.resize(), 50);
+  }
+
+  // ── Grid ↔ Map sync ───────────────────────────────────────────────────────
+  function syncMapFromGrid() {
+    if (!mapReady || !wsLayer || !table) return;
+    const graphics = table.getRows("active")
+      .map(r => wsGraphicsById[r.getData().AccountId])
+      .filter(Boolean);
+    wsLayer.removeAll();
+    wsLayer.addMany(graphics);
+    const n = graphics.length;
+    document.getElementById("wsMapCount").textContent = `${n} account${n !== 1 ? "s" : ""}`;
+  }
+
+  function zoomToAllPoints() {
+    if (!wsView || !wsLayer || !_WsExtent) return;
+    const items = wsLayer.graphics.items;
+    if (!items.length) return;
+    const lons = items.map(g => g.geometry.longitude);
+    const lats = items.map(g => g.geometry.latitude);
+    const extent = new _WsExtent({
+      xmin: Math.min(...lons), xmax: Math.max(...lons),
+      ymin: Math.min(...lats), ymax: Math.max(...lats),
+      spatialReference: { wkid: 4326 },
+    });
+    wsView.goTo(extent.expand(1.3));
+  }
+
+  // ── Geo-region drawing ────────────────────────────────────────────────────
+  function setDrawHint(msg) {
+    const el = document.getElementById("wsDrawHint");
+    if (msg) { el.textContent = msg; el.classList.add("visible"); }
+    else      { el.classList.remove("visible"); }
+  }
+
+  function setDrawBtnActive(mode) {
+    document.getElementById("wsRadiusBtn").classList.toggle("draw-active",  mode === "radius");
+    document.getElementById("wsPolygonBtn").classList.toggle("draw-active", mode === "polygon");
+    document.getElementById("wsCancelDrawBtn").style.display = mode ? "" : "none";
+    document.getElementById("wsViewDiv").style.cursor = mode ? "crosshair" : "";
+  }
+
+  function cancelDraw() {
+    if (activeDrawAction) { activeDrawAction.destroy(); activeDrawAction = null; }
+    drawingMode = null;
+    pendingRadiusPoint = null;
+    hideRadiusDialog();
+    if (previewLayer) previewLayer.removeAll();
+    setDrawBtnActive(null);
+    setDrawHint(null);
+  }
+
+  function startRadiusDraw() {
+    if (!mapReady) return;
+    if (drawingMode === "radius") { cancelDraw(); return; }
+    cancelDraw();
+    drawingMode = "radius";
+    setDrawBtnActive("radius");
+    setDrawHint("Click the map to place the center point");
+    wsView.popup.close();
+
+    activeDrawAction = _WsDraw.create("point");
+    activeDrawAction.on("draw-complete", evt => {
+      pendingRadiusPoint = new _WsPoint({
+        x: evt.coordinates[0],
+        y: evt.coordinates[1],
+        spatialReference: wsView.spatialReference,
+      });
+      activeDrawAction = null;
+      drawingMode = null;
+      setDrawBtnActive(null);
+      setDrawHint(null);
+      document.getElementById("wsViewDiv").style.cursor = "";
+      showRadiusDialog();
+    });
+  }
+
+  function startPolygonDraw() {
+    if (!mapReady) return;
+    if (drawingMode === "polygon") { cancelDraw(); return; }
+    cancelDraw();
+    drawingMode = "polygon";
+    setDrawBtnActive("polygon");
+    setDrawHint("Click to add vertices — double-click to finish");
+    wsView.popup.close();
+
+    activeDrawAction = _WsDraw.create("polygon", { mode: "click" });
+
+    // Live preview while drawing
+    activeDrawAction.on(["vertex-add", "cursor-update"], evt => {
+      previewLayer.removeAll();
+      if (evt.vertices.length < 2) return;
+      previewLayer.add(new _WsGraphic({
+        geometry: { type: "polygon", rings: [evt.vertices], spatialReference: wsView.spatialReference },
+        symbol: PREVIEW_FILL,
+      }));
+    });
+
+    activeDrawAction.on("draw-complete", evt => {
+      previewLayer.removeAll();
+      if (evt.vertices.length < 3) { cancelDraw(); return; }
+      const polygon = new _WsPolygon({
+        rings: [evt.vertices],
+        spatialReference: wsView.spatialReference,
+      });
+      activeDrawAction = null;
+      drawingMode = null;
+      setDrawBtnActive(null);
+      setDrawHint(null);
+      document.getElementById("wsViewDiv").style.cursor = "";
+      applyGeoRegion(polygon);
+    });
+  }
+
+  // ── Radius dialog ─────────────────────────────────────────────────────────
+  function showRadiusDialog() {
+    document.getElementById("wsRadiusDialog").classList.add("visible");
+    document.getElementById("wsRadiusMiles").focus();
+    document.getElementById("wsRadiusMiles").select();
+  }
+
+  function hideRadiusDialog() {
+    document.getElementById("wsRadiusDialog").classList.remove("visible");
+  }
+
+  function confirmRadius() {
+    const miles = parseFloat(document.getElementById("wsRadiusMiles").value);
+    if (!miles || miles <= 0 || !pendingRadiusPoint || !_WsGeomEngine) {
+      hideRadiusDialog();
+      pendingRadiusPoint = null;
+      return;
+    }
+    const buffer = _WsGeomEngine.geodesicBuffer(pendingRadiusPoint, miles, "miles");
+    hideRadiusDialog();
+    pendingRadiusPoint = null;
+    applyGeoRegion(buffer);
+  }
+
+  function cancelRadius() {
+    hideRadiusDialog();
+    pendingRadiusPoint = null;
+  }
+
+  // ── Apply / remove geo-region ─────────────────────────────────────────────
+  function applyGeoRegion(geometry) {
+    geoRegionGeometry = geometry;
+
+    regionLayer.removeAll();
+    regionLayer.add(new _WsGraphic({ geometry, symbol: REGION_FILL }));
+
+    document.getElementById("wsRemoveRegionBtn").style.display = "";
+
+    // Fit region in view
+    wsView.goTo(geometry.extent?.expand(1.4) ?? geometry);
+
+    // Apply filter (remove first to avoid stacking if called twice)
+    if (table) {
+      table.removeFilter(geoRegionFilterFn);
+      table.addFilter(geoRegionFilterFn);
+    }
+  }
+
+  function removeGeoRegion() {
+    geoRegionGeometry = null;
+    if (regionLayer) regionLayer.removeAll();
+    document.getElementById("wsRemoveRegionBtn").style.display = "none";
+    if (table) table.removeFilter(geoRegionFilterFn);
+  }
+
+  // Allow Enter key to confirm radius dialog
+  document.getElementById("wsRadiusMiles").addEventListener("keydown", e => {
+    if (e.key === "Enter") confirmRadius();
+    if (e.key === "Escape") cancelRadius();
+  });
+
+  // ── Utility ────────────────────────────────────────────────────────────────
+  function esc(s) {
+    return String(s ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function initTheme() {}
+
+  // ── Tutorial ──────────────────────────────────────────────────────────────
+
+  const TUTORIAL_KEY = "wm_demo_tutorial_seen";
+
+  const TUTORIAL_STEPS = [
+    {
+      title: "Welcome to the Whitespace Map",
+      content: "This demo is loaded with fictional sample data. The Whitespace Map shows which of your accounts are missing products they don't yet own. Every row is a client; every column is a product or integration. A green check means they own it — a gap means an opportunity. Use this to systematically find upsell and cross-sell revenue hiding in your existing book of business.",
+      target: null,
+    },
+    {
+      title: "Key Vocabulary: Gaps & Gap Average",
+      content: "'Gaps' is the count of products or integrations a specific account does not yet own. 'Gap Average' is the average number of gaps across all accounts in your current view — useful for benchmarking which accounts are furthest from a full product suite. A high gap count on an existing client is your best lead.",
+      target: null,
+    },
+    {
+      title: "Tier 1 vs. Owned",
+      content: "'Owned' means the district has an active subscription to that product. 'Tier 1' means they own a partial or legacy version of the product but still have upside opportunity — for example a legacy routing edition, base parent app, or navigation-only tier. Use the Tier 1 and Gap filters to prioritize your outreach list without manually reviewing every account.",
+      target: null,
+    },
+    {
+      title: "Filter by Account Executive",
+      content: "Use the AE filter (top-left filter bar) to narrow the view to just your own accounts. This is your personal whitespace — your patch. You can also filter by GPS vendor, district size, or state to create a targeted segment before you start outreach.",
+      target: "#aeFilter",
+    },
+    {
+      title: "Customizing Your View",
+      content: "Click the column toggles to show or hide optional data columns like GPS Vendor and FM System. Use the flag (★) on any row to mark an account for follow-up — flagged accounts appear in your saved list. When you're ready to act, use 'Export CSV' to download your current view or 'Email Selected' to pre-populate an outreach email.",
+      target: ".card-header",
+    },
+    {
+      title: "You're Ready to Find Revenue",
+      content: "Start by filtering to your accounts, sorting by Gap Count (highest first), and picking your top 5 accounts to reach out to this week. Use the Suggestions button (top right) anytime you want a fresh prospecting idea based on current product trends.",
+      target: null,
+      isFinal: true,
+    },
+  ];
+
+  let tutCurrentStep = 0;
+
+  function launchTutorial(force) {
+    if (!force && localStorage.getItem(TUTORIAL_KEY)) return;
+    tutCurrentStep = 0;
+    document.getElementById("tutorialOverlay").classList.add("active");
+    document.getElementById("tutorialCard").classList.add("visible");
+    renderTutStep();
+    document.addEventListener("keydown", tutEscHandler);
+  }
+
+  function closeTutorial() {
+    document.getElementById("tutorialOverlay").classList.remove("active");
+    document.getElementById("tutorialCard").classList.remove("visible");
+    document.getElementById("tutorialSpotlight").classList.remove("visible");
+    document.getElementById("tutorialOverlay").style.background = "";
+    document.removeEventListener("keydown", tutEscHandler);
+    localStorage.setItem(TUTORIAL_KEY, "1");
+  }
+
+  function tutEscHandler(e) { if (e.key === "Escape") closeTutorial(); }
+
+  function tutGoStep(dir) {
+    tutCurrentStep += dir;
+    if (tutCurrentStep < 0) tutCurrentStep = 0;
+    if (tutCurrentStep >= TUTORIAL_STEPS.length) { closeTutorial(); return; }
+    renderTutStep();
+  }
+
+  function renderTutStep() {
+    const step  = TUTORIAL_STEPS[tutCurrentStep];
+    const total = TUTORIAL_STEPS.length;
+    const isFinal = step.isFinal || tutCurrentStep === total - 1;
+
+    document.getElementById("tutStepLabel").textContent = `Step ${tutCurrentStep + 1} of ${total}`;
+    document.getElementById("tutTitle").textContent   = step.title;
+    document.getElementById("tutContent").textContent = step.content;
+
+    const dotsEl = document.getElementById("tutDots");
+    dotsEl.innerHTML = Array.from({ length: total }, (_, i) => {
+      const cls = i < tutCurrentStep ? "done" : i === tutCurrentStep ? "active" : "";
+      return `<div class="tut-dot ${cls}"></div>`;
+    }).join("");
+
+    const footer = document.getElementById("tutFooter");
+    if (isFinal) {
+      footer.innerHTML = `<span></span><button class="tut-btn tut-btn-cta" onclick="closeTutorial()">Let's go →</button>`;
+    } else {
+      const back = tutCurrentStep > 0
+        ? `<button class="tut-btn tut-btn-back" onclick="tutGoStep(-1)">← Back</button>`
+        : `<span></span>`;
+      footer.innerHTML = `${back}<button class="tut-btn tut-btn-next" onclick="tutGoStep(1)">Next →</button>`;
+    }
+
+    positionTutCard(step);
+  }
+
+  function positionTutCard(step) {
+    const card      = document.getElementById("tutorialCard");
+    const spotlight = document.getElementById("tutorialSpotlight");
+    const overlay   = document.getElementById("tutorialOverlay");
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const cw = Math.min(480, vw * 0.9);
+
+    if (!step.target) {
+      spotlight.classList.remove("visible");
+      overlay.style.background = "rgba(11,15,26,0.84)";
+      card.style.width     = cw + "px";
+      card.style.left      = Math.round((vw - cw) / 2) + "px";
+      card.style.top       = Math.round(vh * 0.28) + "px";
+      card.style.transform = "none";
+      return;
+    }
+
+    const target = document.querySelector(step.target);
+    if (!target) {
+      spotlight.classList.remove("visible");
+      overlay.style.background = "rgba(11,15,26,0.84)";
+      card.style.width     = cw + "px";
+      card.style.left      = Math.round((vw - cw) / 2) + "px";
+      card.style.top       = Math.round(vh * 0.28) + "px";
+      card.style.transform = "none";
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const PAD  = 10;
+
+    overlay.style.background = "transparent";
+    spotlight.classList.add("visible");
+    spotlight.style.left   = (rect.left  - PAD)      + "px";
+    spotlight.style.top    = (rect.top   - PAD)       + "px";
+    spotlight.style.width  = (rect.width  + PAD * 2)  + "px";
+    spotlight.style.height = (rect.height + PAD * 2)  + "px";
+
+    // Place card below the target if there's room, otherwise above
+    const CARD_H = 280;
+    let cardTop = (rect.bottom + PAD + 14 + CARD_H < vh)
+      ? rect.bottom + PAD + 14
+      : Math.max(16, rect.top - PAD - CARD_H - 14);
+
+    let cardLeft = Math.round(rect.left + rect.width / 2 - cw / 2);
+    cardLeft = Math.max(16, Math.min(vw - cw - 16, cardLeft));
+
+    card.style.width     = cw + "px";
+    card.style.left      = cardLeft + "px";
+    card.style.top       = cardTop  + "px";
+    card.style.transform = "none";
+  }
+
+  // ── Suggestions ────────────────────────────────────────────────────────────
+
+  const SUGGESTIONS = [
+    "Telematics integrations have recently been added to Fleet Maintenance. Filter by accounts that use a major GPS vendor but haven't adopted Fleet Maintenance — then send an outreach asking whether their fleet maintenance provider currently integrates with their telematics system. This is a natural conversation starter that leads directly into a Fleet Maintenance demo.",
+    "On-time performance reporting has become a board-level requirement for many districts and contractors. Filter for accounts that have a GPS vendor but no Fleet Tracking integration — these clients are likely tracking on-time data manually or not at all. Reach out to ask how they're currently reporting on-time performance to their transportation directors.",
+    "Districts with Route Planner but no Parent App are missing the parent-facing communication layer. Parents today expect real-time bus tracking. Filter by that combination and send a short email asking how their district currently handles parent inquiries about late buses — Parent App is your answer.",
+    "Summer is budget season. Any account with more than 4 gaps is a prime candidate for add-on purchases. An important part of your outreach should be asking how many different tools they manage now and how simplifying with one vendor could help save costs.",
+    "Districts that run Route Planner but haven't adopted Fleet Maintenance often don't realize vehicle maintenance and routing live in the same platform. Filter for that gap combination and send a quick note asking what system they use today to track vehicle maintenance and whether it connects to their routing data.",
+    "Districts still using standalone third-party products for fleet maintenance or field trips are not getting the benefits of an integrated platform. Try searching by those filters and send an outreach highlighting the benefit of an all-in-one platform.",
+    "Efficiency is the number one priority for most districts today — cutting costs and tracking your ridership is one of the best options to increase efficiency. Filter by districts with a gap in Onboard Nav and suggest they consider a pilot to see how much the solution could increase their efficiency.",
+  ];
+
+  let suggQueue = [];
+  let suggPos   = 0;
+
+  function openSuggestions() {
+    buildSuggQueue();
+    suggPos = 0;
+    showCurrentSuggestion();
+    document.getElementById("suggestionsModal").classList.add("active");
+    document.addEventListener("keydown", suggEscHandler);
+  }
+
+  function closeSuggestions() {
+    document.getElementById("suggestionsModal").classList.remove("active");
+    document.removeEventListener("keydown", suggEscHandler);
+  }
+
+  function suggEscHandler(e) { if (e.key === "Escape") closeSuggestions(); }
+
+  function nextSuggestion() {
+    suggPos = (suggPos + 1) % suggQueue.length;
+    showCurrentSuggestion();
+  }
+
+  function showCurrentSuggestion() {
+    const el = document.getElementById("suggestionText");
+    el.style.opacity = "0";
+    setTimeout(() => {
+      el.textContent = SUGGESTIONS[suggQueue[suggPos]];
+      el.style.opacity = "1";
+    }, 120);
+  }
+
+  function buildSuggQueue() {
+    const lastShown = suggQueue.length > 0 ? suggQueue[suggPos] : -1;
+    suggQueue = SUGGESTIONS.map((_, i) => i);
+    for (let i = suggQueue.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [suggQueue[i], suggQueue[j]] = [suggQueue[j], suggQueue[i]];
+    }
+    // Avoid showing the same suggestion twice in a row
+    if (suggQueue.length > 1 && suggQueue[0] === lastShown) {
+      [suggQueue[0], suggQueue[1]] = [suggQueue[1], suggQueue[0]];
+    }
+  }
+
+  // ── Map panel drag-resize ─────────────────────────────────────────────────
+  (function initResizeHandle() {
+    const MIN_MAP_W  = 460;   // matches CSS default flex-basis
+    const MIN_GRID_W = 400;   // enough to keep Account Name column visible
+
+    let isResizing = false;
+    let startX     = 0;
+    let startWidth = 0;
+
+    document.getElementById("wsResizeHandle").addEventListener("mousedown", e => {
+      if (document.getElementById("mainArea").classList.contains("map-maximized")) return;
+      isResizing = true;
+      startX     = e.clientX;
+      startWidth = document.getElementById("wsMapPanel").offsetWidth;
+      document.body.classList.add("ws-resizing");
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", e => {
+      if (!isResizing) return;
+      const mainArea = document.getElementById("mainArea");
+      const panel    = document.getElementById("wsMapPanel");
+      // dragging left  → dx positive → panel wider
+      const dx       = startX - e.clientX;
+      const maxMapW  = mainArea.clientWidth - MIN_GRID_W - 10; // 10 = gap
+      const newWidth = Math.min(Math.max(startWidth + dx, MIN_MAP_W), maxMapW);
+      panel.style.flex = `0 0 ${newWidth}px`;
+      if (wsView) wsView.resize();
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (!isResizing) return;
+      isResizing = false;
+      document.body.classList.remove("ws-resizing");
+    });
+  })();
+
+  // ── Entrypoint (demo: no auth, data is generated locally) ────────────────
+  document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
+    loadData();
+    document.getElementById("tutSkip").addEventListener("click", e => { e.preventDefault(); closeTutorial(); });
+    setTimeout(() => launchTutorial(false), 500);
+  });
+</script>
+</body>
+</html>

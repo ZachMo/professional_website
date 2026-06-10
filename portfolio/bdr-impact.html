@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BDR Impact — Portfolio Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --black:      #262626;
+      --charcoal:   #4B4B4B;
+      --silver:     #D6D6D6;
+      --smoke:      #F2F2F2;
+      --ice:        #ECF2F9;
+      --white:      #FFFFFF;
+      --clay:       #D76B5B;
+      --clay-dark:  #B85848;
+      --green:      #349A03;
+      --green-bg:   rgba(52,154,3,0.09);
+      --red:        #E21837;
+      --red-bg:     rgba(226,24,55,0.08);
+      --gray-400:   #BFBFBF;
+      --gray-500:   #9A9A9A;
+      --gray-600:   #6B6B6B;
+      --sans: 'Outfit', system-ui, -apple-system, sans-serif;
+      --shadow-sm: 0 1px 4px rgba(38,38,38,0.08);
+      --shadow-md: 0 4px 14px rgba(38,38,38,0.10);
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 10px;
+      --border: 1px solid var(--silver);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--sans); background: var(--smoke); color: var(--charcoal);
+           -webkit-font-smoothing: antialiased; min-height: 100vh; }
+
+    /* ── Loading overlay ── */
+    #loadingOverlay {
+      position: fixed; inset: 0; background: rgba(242,242,242,0.90);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 900; flex-direction: column; gap: 14px;
+    }
+    #loadingOverlay.hidden { display: none; }
+    .spinner { width: 36px; height: 36px; border: 3px solid var(--silver);
+               border-top-color: var(--clay); border-radius: 50%;
+               animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-msg { font-size: 13px; color: var(--gray-500); font-weight: 600; }
+
+    /* ── Demo banner ── */
+    .demo-banner {
+      background: #FDF6E7; border-bottom: 1px solid #EAD9AC;
+      color: #8A6A1F; font-size: 12px; font-weight: 600;
+      text-align: center; padding: 6px 16px; letter-spacing: 0.02em;
+    }
+    .demo-banner .demo-badge {
+      display: inline-block; background: #8A6A1F; color: #FDF6E7;
+      font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.10em;
+      padding: 2px 7px; border-radius: 999px; margin-right: 8px; vertical-align: 1px;
+    }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--white); border-bottom: var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+    .page-header-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 20px 8px; border-bottom: var(--border);
+    }
+    .page-mark { width: 28px; height: 28px; border-radius: 7px; background: var(--clay);
+                 display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                 color: #fff; font-size: 12px; font-weight: 800; letter-spacing: -0.02em; }
+    .page-title { font-size: 17px; font-weight: 700; color: var(--black); }
+    .page-sub { font-size: 12px; color: var(--gray-500); margin-left: auto; white-space: nowrap; }
+
+    .filter-row {
+      display: flex; align-items: center; gap: 8px; padding: 7px 20px; flex-wrap: wrap;
+    }
+    .filter-label { font-size: 10px; font-weight: 700; text-transform: uppercase;
+                    letter-spacing: 0.08em; color: var(--gray-500); white-space: nowrap; }
+    .filter-divider { width: 1px; height: 18px; background: var(--silver); flex-shrink: 0; }
+    .pill-group { display: flex; gap: 3px; flex-wrap: wrap; }
+    .pill {
+      font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+      padding: 2px 9px; border-radius: 999px; height: 24px;
+      border: var(--border); background: var(--white); color: var(--gray-500);
+      cursor: pointer; transition: all 0.12s; display: flex; align-items: center; white-space: nowrap;
+    }
+    .pill:hover { border-color: var(--gray-400); color: var(--charcoal); }
+    .pill.active { background: var(--clay); color: #fff; border-color: var(--clay-dark); }
+    .pill.year-active { background: var(--black); color: #fff; border-color: var(--black); }
+    .pill-bdr.active { color: #fff; border-color: transparent; }
+
+    .refresh-btn {
+      font-family: var(--sans); font-size: 11.5px; font-weight: 600; margin-left: auto;
+      padding: 3px 11px; border-radius: var(--radius-sm); height: 26px;
+      border: var(--border); background: var(--white); color: var(--charcoal);
+      cursor: pointer; transition: all 0.12s; white-space: nowrap; flex-shrink: 0;
+    }
+    .refresh-btn:hover { border-color: var(--clay); color: var(--clay); }
+
+    /* ── Page content ── */
+    .page-content { max-width: 1400px; margin: 0 auto; padding: 20px 20px 60px; }
+
+    /* ── KPI row ── */
+    .kpi-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+    .kpi-chip {
+      flex: 1; min-width: 130px;
+      background: var(--white); border: var(--border); border-radius: var(--radius-lg);
+      padding: 12px 16px; box-shadow: var(--shadow-sm);
+      border-top: 3px solid var(--silver);
+    }
+    .kpi-chip.won   { border-top-color: var(--green); }
+    .kpi-chip.lost  { border-top-color: var(--red); }
+    .kpi-chip.rate  { border-top-color: var(--clay); }
+    .kpi-chip.arr   { border-top-color: #4A7FA5; }
+    .kpi-chip.days  { border-top-color: var(--gray-500); }
+    .kpi-val { font-size: 28px; font-weight: 700; color: var(--black); line-height: 1; }
+    .kpi-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+               color: var(--gray-500); margin-top: 4px; }
+    .kpi-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+
+    /* ── Section headers ── */
+    .viz-section { margin-bottom: 32px; }
+    .section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 14px; }
+    .section-eyebrow { font-size: 10px; font-weight: 700; text-transform: uppercase;
+                       letter-spacing: 0.10em; color: var(--clay); }
+    .section-title { font-size: 18px; font-weight: 700; color: var(--black); }
+    .section-desc { font-size: 12px; color: var(--gray-500); margin-left: auto; }
+
+    /* ── Chart cards ── */
+    .chart-card {
+      background: var(--white); border: var(--border); border-radius: var(--radius-lg);
+      padding: 16px 18px; box-shadow: var(--shadow-sm); position: relative;
+    }
+    .chart-title { font-size: 12px; font-weight: 700; color: var(--black); margin-bottom: 2px; }
+    .chart-sub { font-size: 11px; color: var(--gray-500); margin-bottom: 14px; }
+    .chart-canvas-wrap { position: relative; }
+    .chart-canvas-wrap canvas { display: block; }
+
+    /* ── Layout helpers ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    @media (max-width: 860px) { .two-col, .three-col { grid-template-columns: 1fr; } }
+
+    /* ── BDR summary table ── */
+    .summary-table-wrap { overflow-x: auto; }
+    .summary-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .summary-table thead th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+      color: var(--gray-500); text-align: left; padding: 7px 10px 7px;
+      border-bottom: 2px solid var(--silver); white-space: nowrap; background: var(--smoke);
+    }
+    .summary-table thead th.num { text-align: right; }
+    .summary-table tbody td { padding: 8px 10px; border-bottom: var(--border); vertical-align: middle; }
+    .summary-table tbody tr:last-child td { border-bottom: none; }
+    .summary-table tbody tr:hover td { background: var(--ice); }
+    .bdr-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 7px; flex-shrink: 0; }
+    .bdr-name { font-weight: 600; color: var(--black); display: flex; align-items: center; }
+    .num-cell { text-align: right; font-weight: 600; color: var(--black); }
+    .rate-cell { text-align: right; font-weight: 700; }
+    .rate-high { color: var(--green); }
+    .rate-mid  { color: var(--clay); }
+    .rate-low  { color: var(--red); }
+    .arr-cell { text-align: right; font-weight: 600; color: #4A7FA5; font-size: 12px; }
+    .spark-cell { text-align: right; }
+
+    /* ── Small multiples ── */
+    .sm-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .sm-card {
+      background: var(--white); border: var(--border); border-radius: var(--radius-md);
+      padding: 12px 14px; box-shadow: var(--shadow-sm);
+    }
+    .sm-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .sm-name { font-size: 12px; font-weight: 700; color: var(--black); display: flex; align-items: center; gap: 6px; }
+    .sm-stats { font-size: 10px; color: var(--gray-500); text-align: right; }
+    .sm-count { font-size: 16px; font-weight: 700; color: var(--black); }
+    .sm-svg { display: block; width: 100%; }
+
+    /* ── Error banner ── */
+    .error-banner {
+      background: var(--red-bg); border: 1px solid rgba(226,24,55,0.22);
+      border-radius: var(--radius-md); padding: 14px 16px; font-size: 13px; margin-bottom: 20px;
+    }
+    .error-banner strong { color: var(--red); display: block; margin-bottom: 4px; }
+
+    /* ── Legend ── */
+    .chart-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--charcoal); cursor: pointer; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-msg" id="loadingMsg">Loading…</div>
+</div>
+
+<!-- Top bar -->
+<div class="top-bar">
+  <div class="demo-banner">
+    <span class="demo-badge">Portfolio Demo</span>
+    All data on this page is fictional sample data, generated in the browser. No real companies, people, or deals are shown.
+  </div>
+  <div class="page-header-row">
+    <span class="page-mark">BI</span>
+    <span class="page-title">BDR Impact</span>
+    <span class="page-sub">New Logo Opportunities 2021 – present</span>
+    <button class="refresh-btn" id="refreshBtn">↺ Regenerate Sample Data</button>
+  </div>
+  <div class="filter-row">
+    <span class="filter-label">BDR</span>
+    <div class="pill-group" id="bdrPillGroup"></div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Year</span>
+    <div class="pill-group" id="yearPillGroup">
+      <button class="pill year-active" data-year="2021">2021</button>
+      <button class="pill year-active" data-year="2022">2022</button>
+      <button class="pill year-active" data-year="2023">2023</button>
+      <button class="pill year-active" data-year="2024">2024</button>
+      <button class="pill year-active" data-year="2025">2025</button>
+      <button class="pill year-active" data-year="2026">2026</button>
+    </div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Status</span>
+    <div class="pill-group" id="statusPillGroup">
+      <button class="pill active" data-status="all">All</button>
+      <button class="pill" data-status="open">Open</button>
+      <button class="pill" data-status="won">Won</button>
+      <button class="pill" data-status="lost">Lost</button>
+    </div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Bookings by</span>
+    <div class="pill-group" id="metricPillGroup">
+      <button class="pill active" data-metric="created">Created Date</button>
+      <button class="pill" data-metric="demo">Demo Date</button>
+    </div>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="page-content">
+
+  <!-- Error -->
+  <div id="errorBanner" class="error-banner" style="display:none;">
+    <strong id="errorMsg">Error</strong>
+    <span id="errorDetail"></span>
+  </div>
+
+  <!-- KPI row -->
+  <div class="kpi-row">
+    <div class="kpi-chip">
+      <div class="kpi-val" id="k-booked">—</div>
+      <div class="kpi-lbl">Opportunities Booked</div>
+      <div class="kpi-sub" id="k-booked-sub"></div>
+    </div>
+    <div class="kpi-chip won">
+      <div class="kpi-val" id="k-won">—</div>
+      <div class="kpi-lbl">Closed Won</div>
+      <div class="kpi-sub" id="k-won-sub"></div>
+    </div>
+    <div class="kpi-chip lost">
+      <div class="kpi-val" id="k-lost">—</div>
+      <div class="kpi-lbl">Closed Lost</div>
+      <div class="kpi-sub" id="k-lost-sub"></div>
+    </div>
+    <div class="kpi-chip rate">
+      <div class="kpi-val" id="k-rate">—</div>
+      <div class="kpi-lbl">Win Rate</div>
+      <div class="kpi-sub" id="k-rate-sub">Won ÷ (Won + Lost)</div>
+    </div>
+    <div class="kpi-chip arr">
+      <div class="kpi-val" id="k-arr">—</div>
+      <div class="kpi-lbl">ARR Won</div>
+      <div class="kpi-sub" id="k-arr-sub"></div>
+    </div>
+    <div class="kpi-chip days">
+      <div class="kpi-val" id="k-days">—</div>
+      <div class="kpi-lbl">Avg Days to Close</div>
+      <div class="kpi-sub" id="k-days-sub">Won opportunities only</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Bookings Over Time -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">01</span>
+      <span class="section-title">Bookings Over Time</span>
+      <span class="section-desc">Monthly opportunity count by BDR</span>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Monthly Bookings — Stacked by Rep</div>
+      <div class="chart-sub">Each bar = one month. Stack segments show each BDR's contribution.</div>
+      <div id="bookingsLegend" class="chart-legend"></div>
+      <div class="chart-canvas-wrap" style="height:260px;">
+        <canvas id="bookingsChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Year-over-Year + BDR Summary Table -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">02</span>
+      <span class="section-title">Rep Performance</span>
+      <span class="section-desc">Outcomes, value, and velocity by BDR</span>
+    </div>
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-title">Year-over-Year Monthly Cadence</div>
+        <div class="chart-sub">One line per year — Jan through Dec — reveals seasonal patterns.</div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="yoyChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card summary-table-wrap">
+        <div class="chart-title">Rep Summary</div>
+        <div class="chart-sub">Sorted by total opportunities booked.</div>
+        <table class="summary-table" id="summaryTable">
+          <thead>
+            <tr>
+              <th>BDR</th>
+              <th class="num">Booked</th>
+              <th class="num">Won</th>
+              <th class="num">Lost</th>
+              <th class="num">Open</th>
+              <th class="num">Win %</th>
+              <th class="num">ARR Won</th>
+              <th class="num">Trend</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Outcomes -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">03</span>
+      <span class="section-title">Outcomes</span>
+      <span class="section-desc">Won vs. lost by year and by rep</span>
+    </div>
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-title">Annual Outcomes</div>
+        <div class="chart-sub">Won, lost, and still-open opportunities per year (by created date).</div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="outcomesChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Win Rate by Rep</div>
+        <div class="chart-sub">Won ÷ (Won + Lost). Only closed opportunities counted.</div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="winRateChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Time to Close -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">04</span>
+      <span class="section-title">Time to Close</span>
+      <span class="section-desc">Days from opportunity created to estimated close date (won only)</span>
+    </div>
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-title">Avg Days to Close by Rep</div>
+        <div class="chart-sub">Shorter bars = faster-closing pipeline from that rep.</div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="daysChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Days to Close by Year</div>
+        <div class="chart-sub">Is the pipeline moving faster or slower over time?</div>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="daysYearChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Small Multiples -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">05</span>
+      <span class="section-title">Per-Rep Monthly Cadence</span>
+      <span class="section-desc">Same scale across all panels — compare volume and consistency</span>
+    </div>
+    <div class="sm-grid" id="smallMultiplesGrid"></div>
+  </div>
+
+  <!-- Section 6: BDR × SC Collaboration -->
+  <div class="viz-section">
+    <div class="section-head">
+      <span class="section-eyebrow">06</span>
+      <span class="section-title">BDR × Sales Consultant Collaboration</span>
+      <span class="section-desc">Which pairings produce the best outcomes?</span>
+      <div class="pill-group" style="margin-left:auto;">
+        <button class="pill active" id="collabToggleWinRate">Win Rate %</button>
+        <button class="pill" id="collabToggleRevenue">Revenue / Opp</button>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="chart-card">
+        <div class="chart-title" id="collabChartTitle">Top Pairings — Win Rate</div>
+        <div class="chart-sub" id="collabChartSub">BDR + SC combinations with ≥10 opps and ≥1 win, sorted by win rate % of total.</div>
+        <div class="chart-canvas-wrap" style="height:300px;">
+          <canvas id="collabChart"></canvas>
+        </div>
+      </div>
+      <div class="chart-card summary-table-wrap">
+        <div class="chart-title">All Pairings</div>
+        <div class="chart-sub">Sorted by the active metric. Both metrics always shown.</div>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>BDR</th>
+              <th>Sales Consultant</th>
+              <th class="num">Opps</th>
+              <th class="num">Won</th>
+              <th class="num" id="thWinRate" style="color:var(--clay);">Win % ↓</th>
+              <th class="num" id="thRevenue">$ / Opp</th>
+            </tr>
+          </thead>
+          <tbody id="collabTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page-content -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   BDR IMPACT — PORTFOLIO DEMO
+   All data is fictional, generated client-side. No external
+   data sources are contacted (charts/fonts load from public CDNs).
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Constants ─────────────────────────────────────────────── */
+const PALETTE = [
+  '#D76B5B','#4A7FA5','#5D8A5D','#A07848',
+  '#7268AA','#3D8C8C','#C77A3A','#7A8A60',
+  '#B85888','#5A7A9A','#8C6030','#6A9A70',
+];
+const NO_BDR_COLOR  = '#8C8C8C'; // distinct neutral gray — clearly "unassigned"
+const MIN_BDR_OPPS  = 10;        // reps with fewer total opps roll into No BDR
+
+const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YR_COLORS = {
+  '2021':'#BFBFBF','2022':'#9A9A9A','2023':'#6B6B6B',
+  '2024':'#A07848','2025':'#D76B5B','2026':'#262626'
+};
+
+/* ── State ──────────────────────────────────────────────────── */
+let allOpps   = [];
+let allBDRs   = [];
+let bdrColors = {};
+let charts    = {};
+
+const F = {
+  years:  new Set(['2021','2022','2023','2024','2025','2026']),
+  bdrs:   new Set(),   // empty = all selected
+  status: 'all',
+  metric: 'created',   // 'created' | 'demo'
+};
+
+/* ── Helpers ────────────────────────────────────────────────── */
+function pDate(s) {
+  if (!s) return null;
+  const d = new Date(s);
+  if (isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+function pNum(v) {
+  if (v == null) return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+}
+function mKey(d)    { return d ? `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}` : null; }
+function mLabel(k)  { const [y,m]=k.split('-'); return `${MO[+m-1]} '${y.slice(2)}`; }
+function fmoney(v)  { return v == null ? '—' : '$'+Math.round(v).toLocaleString('en-US'); }
+function fnum(v)    { return v == null ? '—' : Number(v).toLocaleString('en-US'); }
+function fpct(v)    { return v == null ? '—' : Math.round(v)+'%'; }
+function eHtml(s)   { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function classifyOutcome(raw) {
+  const st = (raw.Status || '').toLowerCase().trim();
+  const ps = (raw.ProposalStatus || '').trim();
+  if (st === 'open') return 'open';
+  if (ps === 'Sold') return 'won';
+  if (/lost|cancel/i.test(ps) || st === 'lost' || st === 'canceled') return 'lost';
+  if (st !== 'open') return 'lost'; // closed but unclear reason
+  return 'open';
+}
+
+function parseOpp(raw) {
+  const bdr = (raw.BDR || raw.AccountBDR || '').trim() || 'No BDR';
+  const createdOn  = pDate(raw.CreatedOn);
+  const estClose   = pDate(raw.EstCloseDate);
+  const demoDate   = pDate(raw.BonusDemoDate);
+  const outcome    = classifyOutcome(raw);
+  const value      = pNum(raw.QuoteTotalValueOfDeal)
+                  ?? pNum(raw.EstSalesAmountSoftware)
+                  ?? pNum(raw.CrmExpectedRevenue)
+                  ?? pNum(raw.RepExpectedRevenue);
+
+  const daysToClose = (createdOn && estClose && outcome !== 'open')
+    ? Math.round((estClose - createdOn) / 86400000) : null;
+
+  const createdMKey = mKey(createdOn);
+  const demoMKey    = mKey(demoDate);
+  const createdYear = createdMKey ? createdMKey.slice(0,4) : null;
+
+  return {
+    id: raw.OpportunityId || '', name: raw.Name || 'Untitled',
+    bdr, owner: raw.Owner || '—', accountName: raw.AccountName || '—',
+    state: raw.AccountStateOrProvince || '',
+    outcome, proposalStatus: raw.ProposalStatus || '',
+    createdOn, createdMKey, createdYear, demoDate, demoMKey,
+    estCloseDate: estClose, value, daysToClose,
+  };
+}
+
+/* ── UI helpers ─────────────────────────────────────────────── */
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg || 'Loading…';
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.add('hidden'); }
+
+function showError(msg, detail) {
+  const b = document.getElementById('errorBanner');
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('errorDetail').textContent = detail || '';
+  b.style.display = 'block';
+}
+
+/* ── Sample data generator (all fictional) ──────────────────────
+   Replaces the live CRM data layer from the production version.
+   Produces raw records in the exact field shape the parser below
+   expects, with a deterministic seeded PRNG so the default view is
+   reproducible. "Regenerate" re-rolls with a random seed.
+─────────────────────────────────────────────────────────────── */
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// Fictional BDR roster: start year + baseline win-skill drive the story
+const BDR_ROSTER = [
+  { name: 'Maya Castellanos',  start: 2021, skill: 0.55 },
+  { name: 'Jordan Pruitt',     start: 2021, skill: 0.40 },
+  { name: 'Devon Okafor',      start: 2022, skill: 0.50 },
+  { name: 'Sienna Marsh',      start: 2023, skill: 0.46 },
+  { name: 'Cole Whitaker',     start: 2024, skill: 0.34 },
+  { name: 'Priya Raghunathan', start: 2025, skill: 0.52 },
+];
+// Fictional sales consultants (AEs)
+const SC_ROSTER = ['Alex Trevino','Brooke Lindqvist','Marcus Hale','Dana Kowalski','Sam Iverson'];
+
+const DISTRICT_NAMES = [
+  'Cedar Hollow','Maple Ridge','Brookstone','Silver Creek','Lakemont','Fairview Heights',
+  'Pine Bluff','Granite Falls','Willow Bend','Northgate','Harborview','Sunfield',
+  'Oakdale Valley','Riverton','Clearwater','Stonebridge','Elm Grove','Prairie Vista',
+  'Copper Canyon','Bayside','Summit Park','Twin Pines','Birchwood','Crestline',
+  'Meadowbrook','Sagebrush','Aurora Heights','Larkspur','Foxglove','Hollis Township',
+];
+const DISTRICT_SUFFIXES = ['USD','ISD','CSD','School District','Public Schools','Community Schools','County Schools'];
+const PRODUCTS = [
+  'Routing & Planning Suite','Fleet Maintenance Platform','Parent Communication App',
+  'GPS & Telematics Bundle','Field Trip Management','Driver Scheduling Module',
+];
+const OPEN_STAGES  = ['Demo Completed','Proposal Sent','In Evaluation','Quote Delivered','Negotiation'];
+const LOST_STAGES  = ['Lost - Competitor','Lost - No Decision','Lost - Budget','Canceled'];
+const SAMPLE_STATES = ['TX','OH','PA','NY','CA','IL','GA','NC','MI','FL','WA','MN','MO','VA','TN','CO','IN','AZ','WI','SC'];
+
+// K-12 seasonality: districts evaluate hardest Mar–Jul (budget + summer prep)
+const SEASONALITY = [0.55, 0.70, 1.10, 1.30, 1.40, 1.30, 1.15, 0.95, 0.85, 0.70, 0.50, 0.45];
+// Avg monthly bookings per year: steady YoY growth so the cadence chart stacks upward
+const YEAR_BASE = { 2021: 5.5, 2022: 7.5, 2023: 9.5, 2024: 12, 2025: 15, 2026: 17.5 };
+
+function generateSampleData(seed) {
+  const rnd  = mulberry32(seed);
+  const pick = arr => arr[Math.floor(rnd() * arr.length)];
+  const iso  = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+  const today = new Date();
+  const endY  = Math.min(today.getFullYear(), 2026);
+  const raws  = [];
+  let oppId = 10000;
+
+  const winProb = (bdr, year) => {
+    const base = bdr ? bdr.skill : 0.28;            // unassigned opps close worse
+    return Math.min(0.65, base + (year - 2021) * 0.012); // process improves slightly each year
+  };
+
+  for (let y = 2021; y <= endY; y++) {
+    const lastMonth = (y === today.getFullYear()) ? today.getMonth() : 11;
+    for (let m = 0; m <= lastMonth; m++) {
+      const n = Math.max(1, Math.round(YEAR_BASE[y] * SEASONALITY[m] * (0.80 + rnd() * 0.45)));
+      const activeBDRs = BDR_ROSTER.filter(b => b.start <= y);
+
+      for (let i = 0; i < n; i++) {
+        // ~9% of opps arrive with no BDR attribution
+        const bdr = rnd() < 0.91 ? pick(activeBDRs) : null;
+        const bdrName = bdr ? bdr.name : '';
+
+        // Each BDR routes ~55% of opps to a "preferred" SC so pairings accumulate
+        const prefIdx = bdr ? BDR_ROSTER.indexOf(bdr) % SC_ROSTER.length : Math.floor(rnd() * SC_ROSTER.length);
+        const sc = rnd() < 0.55 ? SC_ROSTER[prefIdx] : pick(SC_ROSTER);
+
+        const created = new Date(y, m, 1 + Math.floor(rnd() * 27));
+        if (created > today) continue;
+        const demo = new Date(created.getTime() + (4 + Math.floor(rnd() * 18)) * 864e5);
+
+        // Outcome: young opps stay open; older ones close at the BDR's win rate
+        const ageDays = (today - created) / 864e5;
+        let outcome;
+        if (ageDays < 60)       outcome = 'open';
+        else if (ageDays < 180) outcome = rnd() < 0.55 ? 'open' : (rnd() < winProb(bdr, y) ? 'won' : 'lost');
+        else                    outcome = rnd() < 0.08 ? 'open' : (rnd() < winProb(bdr, y) ? 'won' : 'lost');
+
+        const closeDays = 45 + Math.floor(rnd() * 285);
+        const estClose  = new Date(created.getTime() + closeDays * 864e5);
+
+        // Deal value: long-tailed $15k–$150k ARR, won deals skew slightly larger
+        let value = Math.round((15000 + Math.pow(rnd(), 1.7) * 135000) / 100) * 100;
+        if (outcome === 'won') value = Math.round(value * 1.12 / 100) * 100;
+
+        const account = `${pick(DISTRICT_NAMES)} ${pick(DISTRICT_SUFFIXES)}`;
+        const status  = outcome === 'open' ? 'Open' : (outcome === 'won' ? 'Closed' : 'Lost');
+        const stage   = outcome === 'won' ? 'Sold' : (outcome === 'open' ? pick(OPEN_STAGES) : pick(LOST_STAGES));
+
+        raws.push({
+          OpportunityId: 'OPP-' + (oppId++),
+          Name: `${account} — ${pick(PRODUCTS)}`,
+          BDR: bdrName,
+          AccountBDR: bdrName,
+          Owner: sc,
+          AccountName: account,
+          AccountId: 'ACC-' + Math.floor(rnd() * 90000 + 10000),
+          AccountStateOrProvince: pick(SAMPLE_STATES),
+          Status: status,
+          ProposalStatus: stage,
+          PipelinePhase: stage,
+          CreatedOn: iso(created),
+          EstCloseDate: iso(estClose),
+          BonusDemoDate: iso(demo),
+          QuoteTotalValueOfDeal: value,
+          EstSalesAmountSoftware: Math.round(value * 0.8),
+          CrmExpectedRevenue: null,
+          RepExpectedRevenue: null,
+        });
+      }
+    }
+  }
+  return raws;
+}
+
+/* ── Data loading (standalone — no network, no auth) ────────── */
+function loadData(reseed = false) {
+  showLoading('Generating sample data…');
+  const seed = reseed ? Math.floor(Math.random() * 2 ** 31) : 20260610;
+  const raw = generateSampleData(seed);
+  processRaw(raw);
+  hideLoading();
+  renderAll();
+}
+
+function processRaw(raw) {
+  const parsed = (Array.isArray(raw) ? raw : []).map(parseOpp);
+
+  // BonusDemoDate is the primary signal for a BDR-credited new prospect demo.
+  // Client/AE-sourced upsell demos do not receive a BonusDemoDate.
+  const withDemo = parsed.filter(o => o.demoDate != null);
+
+  // Secondary filter: won deals always have a ProposalStatus ('Sold'), and new
+  // prospect opps always have a pipeline stage set. Client sales that slip through
+  // with a BonusDemoDate leave ProposalStatus blank on open and lost records.
+  // Requiring a non-empty ProposalStatus for open/lost removes those cleanly.
+  const newLogoOpps = withDemo.filter(o =>
+    o.outcome === 'won' || (o.proposalStatus || '').trim() !== ''
+  );
+
+  // Count each BDR's total across new-logo opps to apply threshold
+  const rawCounts = {};
+  newLogoOpps.forEach(o => rawCounts[o.bdr] = (rawCounts[o.bdr]||0) + 1);
+
+  // Reclassify low-volume BDRs (< MIN_BDR_OPPS) into 'No BDR'
+  allOpps = newLogoOpps.map(o => {
+    if (o.bdr !== 'No BDR' && (rawCounts[o.bdr]||0) < MIN_BDR_OPPS) {
+      return { ...o, bdr: 'No BDR' };
+    }
+    return o;
+  });
+
+  // Build sorted BDR list (by total count, 'No BDR' last)
+  const counts = {};
+  allOpps.forEach(o => counts[o.bdr] = (counts[o.bdr]||0) + 1);
+  allBDRs = Object.entries(counts)
+    .sort((a,b) => {
+      if (a[0]==='No BDR') return 1;
+      if (b[0]==='No BDR') return -1;
+      return b[1]-a[1];
+    })
+    .map(([bdr]) => bdr);
+
+  // Assign colors from palette; override No BDR with a distinct neutral gray
+  allBDRs.forEach((bdr, i) => { bdrColors[bdr] = PALETTE[i % PALETTE.length]; });
+  bdrColors['No BDR'] = NO_BDR_COLOR;
+
+  F.bdrs = new Set(allBDRs);
+  buildFilterUI();
+}
+
+/* ── Filter computation ─────────────────────────────────────── */
+function getFiltered() {
+  return allOpps.filter(o => {
+    const key = F.metric === 'demo' ? o.demoMKey : o.createdMKey;
+    if (!key) return false;
+    const year = key.slice(0,4);
+    if (!F.years.has(year)) return false;
+    if (F.bdrs.size > 0 && F.bdrs.size < allBDRs.length && !F.bdrs.has(o.bdr)) return false;
+    if (F.status !== 'all' && o.outcome !== F.status) return false;
+    return true;
+  });
+}
+
+/* ── Generate all months from Jan 2021 to today ─────────────── */
+function genMonths(fromY, fromM, toY, toM) {
+  const months = [];
+  let y = fromY, m = fromM;
+  while (y < toY || (y === toY && m <= toM)) {
+    months.push(`${y}-${String(m).padStart(2,'0')}`);
+    m++; if (m > 12) { m = 1; y++; }
+  }
+  return months;
+}
+const NOW    = new Date();
+const ALL_MONTHS = genMonths(2021, 1, NOW.getFullYear(), NOW.getMonth()+1);
+
+/* ── Build filter UI ────────────────────────────────────────── */
+function buildFilterUI() {
+  const pg = document.getElementById('bdrPillGroup');
+  pg.innerHTML = '';
+
+  // "All" toggle
+  const allPill = document.createElement('button');
+  allPill.className = 'pill active';
+  allPill.textContent = 'All';
+  allPill.dataset.bdrAll = '1';
+  allPill.addEventListener('click', () => {
+    F.bdrs = new Set(allBDRs);
+    syncBdrPills();
+    renderAll();
+  });
+  pg.appendChild(allPill);
+
+  allBDRs.forEach(bdr => {
+    const btn = document.createElement('button');
+    btn.className = 'pill pill-bdr active';
+    btn.dataset.bdr = bdr;
+    btn.style.setProperty('--bdr-color', bdrColors[bdr]);
+    btn.textContent = bdr === 'No BDR' ? 'No BDR' : bdr.split(' ')[0]; // first name only
+    btn.title = bdr;
+    btn.style.background = bdrColors[bdr];
+    btn.style.color = '#fff';
+    btn.style.borderColor = 'transparent';
+    btn.addEventListener('click', (e) => {
+      if (e.shiftKey) {
+        // Shift+click: solo this BDR
+        F.bdrs = new Set([bdr]);
+      } else {
+        if (F.bdrs.has(bdr)) {
+          F.bdrs.delete(bdr);
+          if (F.bdrs.size === 0) F.bdrs = new Set(allBDRs);
+        } else {
+          F.bdrs.add(bdr);
+        }
+      }
+      syncBdrPills();
+      renderAll();
+    });
+    pg.appendChild(btn);
+  });
+}
+
+function syncBdrPills() {
+  const pg = document.getElementById('bdrPillGroup');
+  const isAll = F.bdrs.size >= allBDRs.length;
+  pg.querySelectorAll('[data-bdr-all]').forEach(b => b.classList.toggle('active', isAll));
+  pg.querySelectorAll('[data-bdr]').forEach(b => {
+    const bdr = b.dataset.bdr;
+    const on  = F.bdrs.has(bdr);
+    b.style.background   = on ? bdrColors[bdr] : 'var(--white)';
+    b.style.color        = on ? '#fff' : 'var(--gray-500)';
+    b.style.borderColor  = on ? 'transparent' : 'var(--silver)';
+  });
+}
+
+/* ── Year pills ─────────────────────────────────────────────── */
+document.getElementById('yearPillGroup').addEventListener('click', e => {
+  const b = e.target.closest('[data-year]');
+  if (!b) return;
+  const y = b.dataset.year;
+  if (F.years.has(y)) {
+    if (F.years.size > 1) F.years.delete(y);
+  } else {
+    F.years.add(y);
+  }
+  b.classList.toggle('year-active', F.years.has(y));
+  renderAll();
+});
+
+/* ── Status pills ───────────────────────────────────────────── */
+document.getElementById('statusPillGroup').addEventListener('click', e => {
+  const b = e.target.closest('[data-status]');
+  if (!b) return;
+  F.status = b.dataset.status;
+  document.querySelectorAll('#statusPillGroup [data-status]').forEach(el => {
+    el.classList.toggle('active', el.dataset.status === F.status);
+  });
+  renderAll();
+});
+
+/* ── Metric pills ───────────────────────────────────────────── */
+document.getElementById('metricPillGroup').addEventListener('click', e => {
+  const b = e.target.closest('[data-metric]');
+  if (!b) return;
+  F.metric = b.dataset.metric;
+  document.querySelectorAll('#metricPillGroup [data-metric]').forEach(el => {
+    el.classList.toggle('active', el.dataset.metric === F.metric);
+  });
+  renderAll();
+});
+
+/* ── Regenerate sample data ─────────────────────────────────── */
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  showLoading('Generating new sample data…');
+  setTimeout(() => loadData(true), 50); // let the overlay paint first
+});
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER ALL
+══════════════════════════════════════════════════════════════ */
+function renderAll() {
+  const opps = getFiltered();
+  renderKPIs(opps);
+  renderBookingsChart(opps);
+  renderYoYChart(opps);
+  renderSummaryTable(opps);
+  renderOutcomesChart(opps);
+  renderWinRateChart(opps);
+  renderDaysChart(opps);
+  renderDaysYearChart(opps);
+  renderSmallMultiples(opps);
+  renderCollaboration(opps);
+}
+
+/* ── KPIs ───────────────────────────────────────────────────── */
+function renderKPIs(opps) {
+  const won  = opps.filter(o => o.outcome === 'won');
+  const lost = opps.filter(o => o.outcome === 'lost');
+  const open = opps.filter(o => o.outcome === 'open');
+  const closed = won.length + lost.length;
+  const winRate = closed > 0 ? (won.length / closed) * 100 : null;
+  const arrWon  = won.reduce((s,o) => s + (o.value||0), 0);
+  const wonWithDays = won.filter(o => o.daysToClose != null && o.daysToClose > 0);
+  const avgDays = wonWithDays.length > 0
+    ? Math.round(wonWithDays.reduce((s,o) => s+o.daysToClose, 0) / wonWithDays.length) : null;
+
+  set('k-booked', fnum(opps.length));
+  set('k-booked-sub', `${open.length} open · ${closed} closed`);
+  set('k-won', fnum(won.length));
+  set('k-won-sub', `of ${closed} closed`);
+  set('k-lost', fnum(lost.length));
+  set('k-lost-sub', closed > 0 ? `${Math.round(lost.length/closed*100)}% of closed` : '');
+  set('k-rate', winRate != null ? Math.round(winRate)+'%' : '—');
+  set('k-arr', arrWon > 0 ? fmoney(arrWon) : '—');
+  set('k-arr-sub', won.length > 0 ? `avg ${fmoney(arrWon/won.length)}/deal` : '');
+  set('k-days', avgDays != null ? avgDays : '—');
+}
+
+function set(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+/* ─── Chart.js global defaults ──────────────────────────────── */
+Chart.defaults.font.family = "'Outfit', system-ui, sans-serif";
+Chart.defaults.color = '#9A9A9A';
+Chart.defaults.animation = false;
+Chart.defaults.plugins.legend.display = false;
+
+function destroyChart(key) {
+  if (charts[key]) { charts[key].destroy(); charts[key] = null; }
+}
+
+/* ── 1. Bookings stacked bar ─────────────────────────────────── */
+function renderBookingsChart(opps) {
+  const months = ALL_MONTHS.filter(m => F.years.has(m.slice(0,4)));
+
+  // Build per-BDR monthly counts
+  const visibleBDRs = [...F.bdrs].filter(b => allBDRs.includes(b));
+  const byCounts = {};
+  visibleBDRs.forEach(bdr => { byCounts[bdr] = {}; months.forEach(m => byCounts[bdr][m] = 0); });
+  opps.forEach(o => {
+    const key = F.metric === 'demo' ? o.demoMKey : o.createdMKey;
+    if (key && byCounts[o.bdr]) byCounts[o.bdr][key] = (byCounts[o.bdr][key]||0) + 1;
+  });
+
+  const labels = months.map(mLabel);
+  const datasets = visibleBDRs.map(bdr => ({
+    label: bdr,
+    data: months.map(m => byCounts[bdr][m] || 0),
+    backgroundColor: bdrColors[bdr],
+    borderWidth: 0,
+    borderRadius: 1,
+  }));
+
+  // Legend
+  const legEl = document.getElementById('bookingsLegend');
+  legEl.innerHTML = visibleBDRs.map(bdr =>
+    `<div class="legend-item">
+       <span class="legend-dot" style="background:${bdrColors[bdr]};"></span>
+       <span>${eHtml(bdr)}</span>
+     </div>`
+  ).join('');
+
+  // Tick callback: show Jan of each year + abbreviated alternating months
+  const tickCb = function(val, idx) {
+    const label = months[idx];
+    if (!label) return '';
+    const [y, m] = label.split('-');
+    if (m === '01') return `${MO[0]} '${y.slice(2)}`;
+    if (m === '07') return 'Jul';
+    return '';
+  };
+
+  destroyChart('bookings');
+  charts.bookings = new Chart(document.getElementById('bookingsChart'), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: {
+          stacked: true,
+          grid: { display: false },
+          border: { display: false },
+          ticks: {
+            font: { size: 10 }, maxRotation: 0, autoSkip: false,
+            callback: tickCb,
+          },
+        },
+        y: {
+          stacked: true,
+          grid: { color: '#F0F0F0', drawTicks: false },
+          border: { display: false },
+          ticks: { font: { size: 11 }, padding: 4 },
+          beginAtZero: true,
+        },
+      },
+      plugins: {
+        tooltip: {
+          mode: 'index', intersect: false,
+          bodyFont: { size: 11 }, titleFont: { size: 11, weight: '700' },
+          padding: 10,
+        },
+      },
+    },
+  });
+}
+
+/* ── 2. Year-over-Year line chart ────────────────────────────── */
+function renderYoYChart(opps) {
+  const xLabels = MO;
+  const years = [...F.years].filter(y => YR_COLORS[y]).sort();
+
+  const datasets = years.map(yr => {
+    const monthly = new Array(12).fill(0);
+    opps.forEach(o => {
+      const key = F.metric === 'demo' ? o.demoMKey : o.createdMKey;
+      if (key && key.slice(0,4) === yr) {
+        const mo = parseInt(key.slice(5,7)) - 1;
+        monthly[mo]++;
+      }
+    });
+    // Trim future months for current year
+    const now = new Date();
+    const cutoff = (yr === String(now.getFullYear())) ? now.getMonth() : 11;
+    const data = monthly.map((v, i) => i <= cutoff ? v : null);
+
+    return {
+      label: yr, data,
+      borderColor: YR_COLORS[yr], backgroundColor: 'transparent',
+      borderWidth: yr === String(NOW.getFullYear()) ? 2 : 1.5,
+      pointRadius: 0, pointHoverRadius: 4,
+      tension: 0.3,
+    };
+  });
+
+  destroyChart('yoy');
+  charts.yoy = new Chart(document.getElementById('yoyChart'), {
+    type: 'line',
+    data: { labels: xLabels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { boxWidth: 12, boxHeight: 2, font: { size: 10 }, padding: 8 },
+        },
+        tooltip: {
+          mode: 'index', intersect: false,
+          bodyFont: { size: 11 }, titleFont: { size: 11, weight: '700' }, padding: 10,
+        },
+      },
+      scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11 } } },
+        y: {
+          grid: { color: '#F0F0F0', drawTicks: false },
+          border: { display: false },
+          ticks: { font: { size: 11 }, padding: 4 },
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+}
+
+/* ── 3. BDR Summary Table ────────────────────────────────────── */
+function renderSummaryTable(opps) {
+  const tbody = document.getElementById('summaryTableBody');
+  if (!tbody) return;
+
+  // Per-BDR stats
+  const stats = {};
+  allBDRs.forEach(bdr => { stats[bdr] = { booked:0, won:0, lost:0, open:0, arr:0, days:[], monthly:{} }; });
+  opps.forEach(o => {
+    const s = stats[o.bdr];
+    if (!s) return;
+    s.booked++;
+    if (o.outcome === 'won') { s.won++; if (o.value) s.arr += o.value; }
+    if (o.outcome === 'lost') s.lost++;
+    if (o.outcome === 'open') s.open++;
+    if (o.outcome === 'won' && o.daysToClose > 0) s.days.push(o.daysToClose);
+    const key = F.metric === 'demo' ? o.demoMKey : o.createdMKey;
+    if (key) s.monthly[key] = (s.monthly[key]||0) + 1;
+  });
+
+  // Sparkline function (SVG polyline)
+  function sparkline(bdr) {
+    const months = ALL_MONTHS.filter(m => F.years.has(m.slice(0,4)));
+    const vals = months.map(m => stats[bdr].monthly[m] || 0);
+    const max = Math.max(...vals, 1);
+    const W = 56, H = 18;
+    if (vals.every(v => v === 0)) return '<span style="color:var(--gray-400);font-size:10px;">—</span>';
+    const pts = vals.map((v,i) => {
+      const x = months.length > 1 ? (i/(months.length-1))*W : W/2;
+      const y = H - (v/max)*H;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block;">
+      <polyline points="${pts}" fill="none" stroke="${bdrColors[bdr]}" stroke-width="1.5"
+        stroke-linejoin="round" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  const sorted = allBDRs
+    .filter(bdr => stats[bdr] && stats[bdr].booked > 0)
+    .sort((a,b) => stats[b].booked - stats[a].booked);
+
+  tbody.innerHTML = sorted.map(bdr => {
+    const s = stats[bdr];
+    const closed = s.won + s.lost;
+    const rate = closed > 0 ? (s.won/closed)*100 : null;
+    const rateCls = rate == null ? '' : rate >= 50 ? 'rate-high' : rate >= 30 ? 'rate-mid' : 'rate-low';
+    return `<tr>
+      <td><span class="bdr-name">
+        <span class="bdr-dot" style="background:${bdrColors[bdr]};"></span>
+        ${eHtml(bdr)}
+      </span></td>
+      <td class="num-cell">${s.booked}</td>
+      <td class="num-cell" style="color:var(--green);">${s.won}</td>
+      <td class="num-cell" style="color:var(--red);">${s.lost}</td>
+      <td class="num-cell" style="color:var(--gray-500);">${s.open}</td>
+      <td class="rate-cell ${rateCls}">${rate!=null ? Math.round(rate)+'%' : '—'}</td>
+      <td class="arr-cell">${s.arr > 0 ? fmoney(s.arr) : '—'}</td>
+      <td class="spark-cell">${sparkline(bdr)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── 4. Annual Outcomes grouped bar ──────────────────────────── */
+function renderOutcomesChart(opps) {
+  // Always group by createdYear regardless of metric toggle for this chart
+  const years = ['2021','2022','2023','2024','2025','2026'].filter(y => F.years.has(y));
+  const wonY = {}, lostY = {}, openY = {};
+  years.forEach(y => { wonY[y]=0; lostY[y]=0; openY[y]=0; });
+
+  opps.forEach(o => {
+    const y = o.createdYear;
+    if (!y || !wonY.hasOwnProperty(y)) return;
+    if (o.outcome === 'won')  wonY[y]++;
+    if (o.outcome === 'lost') lostY[y]++;
+    if (o.outcome === 'open') openY[y]++;
+  });
+
+  destroyChart('outcomes');
+  charts.outcomes = new Chart(document.getElementById('outcomesChart'), {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [
+        { label:'Won',  data: years.map(y=>wonY[y]),  backgroundColor:'rgba(52,154,3,0.75)',  borderRadius:2 },
+        { label:'Lost', data: years.map(y=>lostY[y]), backgroundColor:'rgba(226,24,55,0.60)', borderRadius:2 },
+        { label:'Open', data: years.map(y=>openY[y]), backgroundColor:'rgba(155,155,155,0.45)', borderRadius:2 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true, position:'top', align:'end',
+          labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 }, padding: 10 } },
+        tooltip: { mode:'index', intersect:false, bodyFont:{size:11}, titleFont:{size:11,weight:'700'}, padding:10 },
+      },
+      scales: {
+        x: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11}} },
+        y: { grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false}, ticks:{font:{size:11},padding:4}, beginAtZero:true },
+      },
+    },
+  });
+}
+
+/* ── 5. Win Rate by BDR horizontal bar ───────────────────────── */
+function renderWinRateChart(opps) {
+  const stats = {};
+  allBDRs.forEach(b => { stats[b] = { won:0, closed:0 }; });
+  opps.forEach(o => {
+    if (!stats[o.bdr]) return;
+    if (o.outcome === 'won')  { stats[o.bdr].won++; stats[o.bdr].closed++; }
+    if (o.outcome === 'lost') { stats[o.bdr].closed++; }
+  });
+
+  const sorted = allBDRs
+    .filter(b => stats[b] && stats[b].closed >= 2)
+    .sort((a,b) => {
+      const ra = stats[a].won / stats[a].closed;
+      const rb = stats[b].won / stats[b].closed;
+      return ra - rb;
+    });
+
+  const rates  = sorted.map(b => Math.round((stats[b].won/stats[b].closed)*100));
+  const colors = rates.map(r => r>=50 ? 'rgba(52,154,3,0.75)' : r>=30 ? 'rgba(215,107,91,0.75)' : 'rgba(226,24,55,0.65)');
+
+  destroyChart('winRate');
+  charts.winRate = new Chart(document.getElementById('winRateChart'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(b => b.length > 15 ? b.slice(0,14)+'…' : b),
+      datasets: [{ data: rates, backgroundColor: colors, borderRadius: 2, borderWidth: 0 }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const bdr = sorted[ctx.dataIndex];
+              return ` ${ctx.parsed.x}% (${stats[bdr].won}W / ${stats[bdr].closed} closed)`;
+            },
+          },
+          bodyFont:{size:11}, titleFont:{size:11,weight:'700'}, padding:10,
+        },
+      },
+      scales: {
+        x: {
+          grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false},
+          ticks:{font:{size:10}}, min:0, max:100,
+          afterBuildTicks(ax){ ax.ticks = [0,25,50,75,100].map(v=>({value:v})); },
+        },
+        y: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11}} },
+      },
+    },
+  });
+}
+
+/* ── 6. Days to Close by BDR ─────────────────────────────────── */
+function renderDaysChart(opps) {
+  const buckets = {};
+  allBDRs.forEach(b => { buckets[b] = []; });
+  opps.filter(o => o.outcome === 'won' && o.daysToClose > 0)
+      .forEach(o => { if (buckets[o.bdr]) buckets[o.bdr].push(o.daysToClose); });
+
+  const sorted = allBDRs
+    .filter(b => buckets[b] && buckets[b].length >= 1)
+    .sort((a,b) => {
+      const avgA = buckets[a].reduce((s,v)=>s+v,0)/buckets[a].length;
+      const avgB = buckets[b].reduce((s,v)=>s+v,0)/buckets[b].length;
+      return avgB - avgA;
+    });
+
+  const avgs   = sorted.map(b => Math.round(buckets[b].reduce((s,v)=>s+v,0)/buckets[b].length));
+  const clrs   = sorted.map(b => bdrColors[b]+'CC');
+
+  destroyChart('days');
+  charts.days = new Chart(document.getElementById('daysChart'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(b => b.length>15 ? b.slice(0,14)+'…' : b),
+      datasets: [{
+        data: avgs, backgroundColor: clrs, borderRadius: 2, borderWidth: 0,
+      }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.x} days avg (${buckets[sorted[ctx.dataIndex]].length} deals)`,
+          },
+          bodyFont:{size:11}, titleFont:{size:11,weight:'700'}, padding:10,
+        },
+      },
+      scales: {
+        x: { grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false}, ticks:{font:{size:10}}, beginAtZero:true },
+        y: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11}} },
+      },
+    },
+  });
+}
+
+/* ── 7. Days to Close by Year ─────────────────────────────────── */
+function renderDaysYearChart(opps) {
+  const years = ['2021','2022','2023','2024','2025','2026'].filter(y => F.years.has(y));
+  const buckets = {};
+  years.forEach(y => { buckets[y] = []; });
+  opps.filter(o => o.outcome === 'won' && o.daysToClose > 0 && o.createdYear)
+      .forEach(o => { if (buckets[o.createdYear]) buckets[o.createdYear].push(o.daysToClose); });
+
+  const avgs  = years.map(y => buckets[y].length
+    ? Math.round(buckets[y].reduce((s,v)=>s+v,0)/buckets[y].length) : 0);
+  const clrs  = years.map(y => YR_COLORS[y] || '#BFBFBF');
+
+  destroyChart('daysYear');
+  charts.daysYear = new Chart(document.getElementById('daysYearChart'), {
+    type: 'bar',
+    data: {
+      labels: years,
+      datasets: [{
+        label: 'Avg Days to Close',
+        data: avgs, backgroundColor: clrs, borderRadius: 2, borderWidth: 0,
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.parsed.y} days avg (${buckets[years[ctx.dataIndex]].length} deals)`,
+          },
+          bodyFont:{size:11}, titleFont:{size:11,weight:'700'}, padding:10,
+        },
+      },
+      scales: {
+        x: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11}} },
+        y: { grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false}, ticks:{font:{size:11},padding:4}, beginAtZero:true },
+      },
+    },
+  });
+}
+
+/* ── 8. Small Multiples (SVG) ────────────────────────────────── */
+function renderSmallMultiples(opps) {
+  const grid = document.getElementById('smallMultiplesGrid');
+  grid.innerHTML = '';
+
+  const months = ALL_MONTHS.filter(m => F.years.has(m.slice(0,4)));
+
+  // Find global max for shared scale
+  const visibleBDRs = [...F.bdrs].filter(b => allBDRs.includes(b));
+  let globalMax = 1;
+  const bdrMonthly = {};
+  visibleBDRs.forEach(bdr => {
+    bdrMonthly[bdr] = {};
+    months.forEach(m => bdrMonthly[bdr][m] = 0);
+  });
+  opps.forEach(o => {
+    const key = F.metric === 'demo' ? o.demoMKey : o.createdMKey;
+    if (key && bdrMonthly[o.bdr]) bdrMonthly[o.bdr][key] = (bdrMonthly[o.bdr][key]||0)+1;
+  });
+  visibleBDRs.forEach(bdr => {
+    months.forEach(m => { if (bdrMonthly[bdr][m] > globalMax) globalMax = bdrMonthly[bdr][m]; });
+  });
+
+  const sorted = visibleBDRs
+    .map(bdr => ({ bdr, total: months.reduce((s,m)=>s+bdrMonthly[bdr][m],0) }))
+    .filter(d => d.total > 0)
+    .sort((a,b) => b.total - a.total);
+
+  sorted.forEach(({ bdr, total }) => {
+    const vals = months.map(m => bdrMonthly[bdr][m]||0);
+    const W = 228, H = 64, PL = 0, PR = 0, PT = 4, PB = 0;
+    const bw = (W - PL - PR) / months.length;
+    const clr = bdrColors[bdr];
+
+    // Build SVG bars
+    let bars = '';
+    months.forEach((m, i) => {
+      const v = vals[i];
+      if (v === 0) return;
+      const bh = ((v / globalMax) * (H - PT - PB));
+      const x  = PL + i * bw;
+      const y  = H - PB - bh;
+      bars += `<rect x="${(x+0.5).toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(bw-0.5,1).toFixed(1)}" height="${bh.toFixed(1)}" fill="${clr}" rx="1"/>`;
+    });
+
+    // Year separator lines
+    let seps = '';
+    months.forEach((m, i) => {
+      if (m.slice(5,7) === '01' && i > 0) {
+        const x = PL + i * bw;
+        seps += `<line x1="${x.toFixed(1)}" y1="0" x2="${x.toFixed(1)}" y2="${H}" stroke="#E8E8E8" stroke-width="1"/>`;
+      }
+    });
+
+    // Outcome stats
+    const bdrOpps = opps.filter(o => o.bdr === bdr);
+    const won  = bdrOpps.filter(o=>o.outcome==='won').length;
+    const lost = bdrOpps.filter(o=>o.outcome==='lost').length;
+    const cl   = won + lost;
+    const rate = cl > 0 ? Math.round(won/cl*100) : null;
+    const rateTxt = rate != null ? `${rate}% win` : 'No closes';
+    const rateClr = rate==null?'var(--gray-400)':rate>=50?'var(--green)':rate>=30?'var(--clay)':'var(--red)';
+
+    const card = document.createElement('div');
+    card.className = 'sm-card';
+    card.innerHTML = `
+      <div class="sm-header">
+        <div class="sm-name">
+          <span class="bdr-dot" style="background:${clr};"></span>
+          ${eHtml(bdr)}
+        </div>
+        <div class="sm-stats">
+          <div class="sm-count">${total}</div>
+          <div style="color:${rateClr};font-size:10px;font-weight:700;">${rateTxt}</div>
+        </div>
+      </div>
+      <svg class="sm-svg" viewBox="0 0 ${W} ${H}" style="height:${H}px;">
+        ${seps}${bars}
+      </svg>
+    `;
+    grid.appendChild(card);
+  });
+
+  if (sorted.length === 0) {
+    grid.innerHTML = '<div style="color:var(--gray-500);font-size:13px;padding:20px 0;">No data for current filters.</div>';
+  }
+}
+
+/* ── 9. BDR × SC Collaboration ───────────────────────────────── */
+let collabMetric = 'winrate'; // 'winrate' | 'revenue'
+
+document.getElementById('collabToggleWinRate').addEventListener('click', () => {
+  collabMetric = 'winrate';
+  document.getElementById('collabToggleWinRate').classList.add('active');
+  document.getElementById('collabToggleRevenue').classList.remove('active');
+  renderCollaboration(getFiltered());
+});
+document.getElementById('collabToggleRevenue').addEventListener('click', () => {
+  collabMetric = 'revenue';
+  document.getElementById('collabToggleRevenue').classList.add('active');
+  document.getElementById('collabToggleWinRate').classList.remove('active');
+  renderCollaboration(getFiltered());
+});
+
+function renderCollaboration(opps) {
+  // Build pair stats: key = "BDR|SC"
+  const pairs = {};
+  opps.forEach(o => {
+    const sc = o.owner && o.owner !== '—' ? o.owner : 'Unassigned';
+    const key = `${o.bdr}|||${sc}`;
+    if (!pairs[key]) pairs[key] = { bdr:o.bdr, sc, total:0, won:0, lost:0, arr:0 };
+    const p = pairs[key];
+    p.total++;
+    if (o.outcome === 'won') { p.won++; if (o.value) p.arr += o.value; }
+    if (o.outcome === 'lost') p.lost++;
+  });
+
+  const byRevOpp = p => p.total > 0 ? p.arr / p.total : 0;
+  const byWinRate = p => p.total > 0 ? p.won / p.total : 0;
+  const sortFn = collabMetric === 'revenue'
+    ? (a,b) => byRevOpp(b) - byRevOpp(a) || b.total - a.total
+    : (a,b) => byWinRate(b) - byWinRate(a) || b.total - a.total;
+
+  const qualified = Object.values(pairs)
+    .filter(p => p.bdr !== 'No BDR' && p.total >= 10 && p.won >= 1)
+    .sort(sortFn);
+
+  const forChart = qualified.slice(0, 14);
+
+  // Update header sort indicators
+  const thWR = document.getElementById('thWinRate');
+  const thRV = document.getElementById('thRevenue');
+  if (thWR) { thWR.style.color = collabMetric==='winrate'?'var(--clay)':'var(--gray-500)'; thWR.textContent = collabMetric==='winrate'?'Win % ↓':'Win %'; }
+  if (thRV) { thRV.style.color = collabMetric==='revenue'?'var(--clay)':'var(--gray-500)'; thRV.textContent = collabMetric==='revenue'?'$ / Opp ↓':'$ / Opp'; }
+
+  // Table
+  const tbody = document.getElementById('collabTableBody');
+  if (tbody) {
+    tbody.innerHTML = qualified.map(p => {
+      const rate    = Math.round(byWinRate(p) * 100);
+      const revOpp  = Math.round(byRevOpp(p));
+      const rateCls = rate>=50?'rate-high':rate>=30?'rate-mid':'rate-low';
+      return `<tr>
+        <td><span class="bdr-name">
+          <span class="bdr-dot" style="background:${bdrColors[p.bdr]||NO_BDR_COLOR};"></span>
+          ${eHtml(p.bdr)}
+        </span></td>
+        <td style="font-size:12px;">${eHtml(p.sc)}</td>
+        <td class="num-cell">${p.total}</td>
+        <td class="num-cell" style="color:var(--green);">${p.won}</td>
+        <td class="rate-cell ${rateCls}" style="${collabMetric==='winrate'?'font-size:13px;':''}">${rate}%</td>
+        <td class="arr-cell" style="${collabMetric==='revenue'?'color:var(--clay);font-size:13px;font-weight:700;':''}">
+          ${revOpp > 0 ? fmoney(revOpp) : '—'}
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Chart — values and appearance depend on active metric
+  const labels = forChart.map(p => `${p.bdr.split(' ')[0]} + ${p.sc.split(' ')[0]}`);
+  let chartValues, chartColors, xConfig, tooltipFn;
+
+  if (collabMetric === 'revenue') {
+    chartValues = forChart.map(p => Math.round(byRevOpp(p)));
+    const maxRev = Math.max(...chartValues, 1);
+    chartColors = chartValues.map(v => {
+      const intensity = v / maxRev;
+      const r = Math.round(74  + (74  - 74)  * intensity);
+      const g = Math.round(127 + (127 - 127) * intensity);
+      const b = Math.round(165 + (165 - 165) * intensity);
+      return `rgba(74,127,165,${0.35 + intensity * 0.60})`;
+    });
+    xConfig = {
+      grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false},
+      ticks:{font:{size:10}, callback: v => '$'+Math.round(v/1000)+'k'},
+      beginAtZero: true,
+    };
+    tooltipFn = ctx => {
+      const p = forChart[ctx.dataIndex];
+      return ` ${fmoney(ctx.parsed.x)} / opp — ${p.total} total · ${p.won} won`;
+    };
+    const ct = document.getElementById('collabChartTitle');
+    const cs = document.getElementById('collabChartSub');
+    if (ct) ct.textContent = 'Top Pairings — Revenue per Opportunity';
+    if (cs) cs.textContent = 'ARR won ÷ total opportunities together. Pairings with ≥10 opps and ≥1 win.';
+  } else {
+    chartValues = forChart.map(p => Math.round(byWinRate(p) * 100));
+    chartColors = chartValues.map(r => r>=50?'rgba(52,154,3,0.75)':r>=30?'rgba(215,107,91,0.75)':'rgba(226,24,55,0.65)');
+    xConfig = {
+      grid:{color:'#F0F0F0',drawTicks:false}, border:{display:false},
+      ticks:{font:{size:10}, callback: v => v+'%'}, min:0, max:100,
+    };
+    tooltipFn = ctx => {
+      const p = forChart[ctx.dataIndex];
+      return ` ${ctx.parsed.x}% — ${p.won} won / ${p.total} total opps`;
+    };
+    const ct = document.getElementById('collabChartTitle');
+    const cs = document.getElementById('collabChartSub');
+    if (ct) ct.textContent = 'Top Pairings — Win Rate';
+    if (cs) cs.textContent = 'Won ÷ total opportunities together. Pairings with ≥10 opps and ≥1 win.';
+  }
+
+  destroyChart('collab');
+  const canvas = document.getElementById('collabChart');
+  if (!canvas || forChart.length === 0) return;
+
+  charts.collab = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ data:chartValues, backgroundColor:chartColors, borderRadius:2, borderWidth:0 }],
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: {
+        tooltip: {
+          callbacks: { label: tooltipFn },
+          bodyFont:{size:11}, titleFont:{size:11,weight:'700'}, padding:10,
+        },
+      },
+      scales: {
+        x: xConfig,
+        y: { grid:{display:false}, border:{display:false}, ticks:{font:{size:11}} },
+      },
+    },
+  });
+}
+
+/* ── Boot ───────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => loadData());
+</script>
+</body>
+</html>

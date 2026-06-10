@@ -35,7 +35,13 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  /* Presentation feel: sections settle into place like slides */
+  scroll-snap-type: y proximity;
+  scroll-padding-top: var(--bar-h);
+}
+section { scroll-snap-align: start; }
 body {
   margin: 0; background: var(--paper); color: var(--on-paper);
   font-family: var(--grotesk); font-size: 17px; line-height: 1.5;
@@ -239,6 +245,40 @@ section { position: relative; }
   .fp-list { grid-template-columns: 1fr; }
 }
 
+/* ============ WORK · FIELD TOOLS ============ */
+.work { padding: clamp(48px, 7vw, 92px) 0; background: var(--paper-2); border-block: 1px solid var(--rule-paper); overflow: hidden; }
+.work-lead { max-width: 58ch; color: var(--on-paper-mut); font-size: 15.5px; line-height: 1.55; margin: 18px 0 0; }
+.work-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 2.5vw, 28px); margin-top: clamp(28px, 4vw, 44px); }
+.tool-card {
+  display: flex; flex-direction: column; background: var(--paper);
+  border: 1px solid var(--rule-paper); transition: border-color .2s, transform .2s, box-shadow .2s;
+}
+.tool-card:hover { border-color: var(--ink); transform: translateY(-3px); box-shadow: 0 14px 34px rgba(17,19,23,.10); }
+.tool-top {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 18px; background: var(--ink); color: var(--on-ink-mut);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.tool-badge { color: var(--orange); border: 1px solid rgba(255,74,0,.45); padding: 2px 7px; white-space: nowrap; }
+.tool-body { padding: clamp(18px, 2.4vw, 28px); flex: 1; }
+.tool-body h3 { font-family: var(--display); font-weight: 800; letter-spacing: -0.015em; font-size: clamp(21px, 2.4vw, 30px); margin: 0 0 10px; }
+.tool-body p { margin: 0; color: var(--on-paper-mut); font-size: 14.5px; line-height: 1.55; }
+.tool-meta { margin-top: 18px; border-top: 1px dashed var(--rule-paper); }
+.tm-row { display: grid; grid-template-columns: 110px 1fr; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--rule-paper-soft); }
+.tm-row:last-child { border-bottom: 0; }
+.tm-k { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--on-paper-faint); padding-top: 2px; }
+.tm-v { font-size: 13.5px; font-weight: 600; }
+.tool-cta {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 18px; border-top: 1px solid var(--rule-paper);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; color: var(--on-paper-mut);
+  transition: background .2s, color .2s;
+}
+.tool-cta .tx { color: var(--orange); }
+.tool-card:hover .tool-cta { background: var(--orange); color: #fff; }
+.tool-card:hover .tool-cta .tx { color: #fff; }
+@media (max-width: 760px) { .work-grid { grid-template-columns: 1fr; } }
+
 /* ============ INTERESTS ============ */
 .off { padding: clamp(46px, 6.5vw, 84px) 0; background: var(--ink); color: var(--on-ink); }
 .off .sec-head { border-top-color: var(--rule-ink); }
@@ -289,8 +329,26 @@ section { position: relative; }
 .rise.d1 { transition-delay: .08s; }
 .rise.d2 { transition-delay: .16s; }
 
+/* presentation-style section entrances: content glides into place */
+.hero .hero-body, .hero .hero-foot,
+.philo .wrap, .exp .wrap, .work .wrap, .off .wrap, .contact .wrap,
+.diaband .diaband-inner {
+  opacity: 0; transform: translateY(48px);
+  transition: opacity .9s cubic-bezier(.22, 1, .36, 1), transform .9s cubic-bezier(.22, 1, .36, 1);
+}
+.hero.in .hero-foot { transition-delay: .15s; }
+.hero.in .hero-body, .hero.in .hero-foot,
+.philo.in .wrap, .exp.in .wrap, .work.in .wrap, .off.in .wrap, .contact.in .wrap,
+.diaband.in .diaband-inner {
+  opacity: 1; transform: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; }
+  html { scroll-snap-type: none; }
   .rise { opacity: 1 !important; transform: none !important; }
+  .hero .hero-body, .hero .hero-foot,
+  .philo .wrap, .exp .wrap, .work .wrap, .off .wrap, .contact .wrap,
+  .diaband .diaband-inner { opacity: 1 !important; transform: none !important; }
   .draw { stroke-dashoffset: 0 !important; }
 }

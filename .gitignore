@@ -1,0 +1,5 @@
+# Internal company tools — never publish (live API references)
+whitespace_map.html
+bdr_impact.html
+
+.DS_Store
